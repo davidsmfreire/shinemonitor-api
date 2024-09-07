@@ -46,14 +46,14 @@ impl WatchPowerFlowData {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataGrid {
-    grid_rating_voltage: f32,
-    grid_rating_current: f32,
-    battery_rating_voltage: f32,
-    ac_output_rating_voltage: f32,
-    ac_output_rating_current: f32,
-    ac_output_rating_frequency: f32,
-    ac_output_rating_apparent_power: i32,
-    ac_output_rating_active_power: i32,
+    pub grid_rating_voltage: f32,
+    pub grid_rating_current: f32,
+    pub battery_rating_voltage: f32,
+    pub ac_output_rating_voltage: f32,
+    pub ac_output_rating_current: f32,
+    pub ac_output_rating_frequency: f32,
+    pub ac_output_rating_apparent_power: i32,
+    pub ac_output_rating_active_power: i32,
 }
 
 impl WatchPowerLastDataGrid {
@@ -125,9 +125,9 @@ impl WatchPowerLastDataGrid {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataSystem {
-    model: String,
-    main_cpu_firmware_version: String,
-    secondary_cpu_firmware_version: String,
+    pub model: String,
+    pub main_cpu_firmware_version: String,
+    pub secondary_cpu_firmware_version: String,
 }
 
 impl WatchPowerLastDataSystem {
@@ -160,7 +160,7 @@ impl WatchPowerLastDataSystem {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataPV {
-    pv_input_current: f32,
+    pub pv_input_current: f32,
 }
 
 impl WatchPowerLastDataPV {
@@ -182,19 +182,19 @@ impl WatchPowerLastDataPV {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataMain {
-    grid_voltage: f32,
-    grid_frequency: f32,
-    pv_input_voltage: f32,
-    pv_input_power: i16,
-    battery_voltage: f32,
-    battery_capacity: i8,
-    battery_charging_current: f32,
-    battery_discharge_current: f32,
-    ac_output_voltage: f32,
-    ac_output_frequency: f32,
-    ac_output_apparent_power: i32,
-    ac_output_active_power: i32,
-    output_load_percent: i8,
+    pub grid_voltage: f32,
+    pub grid_frequency: f32,
+    pub pv_input_voltage: f32,
+    pub pv_input_power: i16,
+    pub battery_voltage: f32,
+    pub battery_capacity: i8,
+    pub battery_charging_current: f32,
+    pub battery_discharge_current: f32,
+    pub ac_output_voltage: f32,
+    pub ac_output_frequency: f32,
+    pub ac_output_apparent_power: i32,
+    pub ac_output_active_power: i32,
+    pub output_load_percent: i8,
 }
 
 impl WatchPowerLastDataMain {
@@ -286,11 +286,11 @@ impl WatchPowerLastDataMain {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastData {
-    timestamp: NaiveDate,
-    grid: WatchPowerLastDataGrid,
-    system: WatchPowerLastDataSystem,
-    pv: WatchPowerLastDataPV,
-    main: WatchPowerLastDataMain,
+    pub timestamp: NaiveDate,
+    pub grid: WatchPowerLastDataGrid,
+    pub system: WatchPowerLastDataSystem,
+    pub pv: WatchPowerLastDataPV,
+    pub main: WatchPowerLastDataMain,
 }
 
 impl WatchPowerLastData {
