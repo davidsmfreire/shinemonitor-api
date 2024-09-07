@@ -376,7 +376,6 @@ impl WatchPowerAPI {
         );
 
         let response: serde_json::Value = self._client.get(&url).send()?.json()?;
-        println!("{:?}", response);
 
         if response["err"].as_u64() == Some(0) {
             self._secret = response["dat"]["secret"].as_str().unwrap().to_string();
