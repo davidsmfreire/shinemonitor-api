@@ -1,11 +1,12 @@
 use chrono::NaiveDate;
 use reqwest::blocking::Client;
+use serde::Serialize;
 use sha1::{Digest, Sha1};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 type WatchPowerAPIResult = Result<serde_json::Value, Box<dyn std::error::Error>>;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 struct WatchPowerDailyData {
     // TODO
 }
@@ -16,7 +17,7 @@ impl WatchPowerDailyData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 struct WatchPowerDeviceParams {
     serial_number: String,
     wifi_pn: String,
@@ -24,7 +25,7 @@ struct WatchPowerDeviceParams {
     dev_addr: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 struct WatchPowerFlowData {
     grid_voltage: f32,
     grid_frequency: f32,
@@ -43,7 +44,7 @@ impl WatchPowerFlowData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataGrid {
     grid_rating_voltage: f32,
     grid_rating_current: f32,
@@ -122,7 +123,7 @@ impl WatchPowerLastDataGrid {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataSystem {
     model: String,
     main_cpu_firmware_version: String,
@@ -157,7 +158,7 @@ impl WatchPowerLastDataSystem {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataPV {
     pv_input_current: f32,
 }
@@ -179,7 +180,7 @@ impl WatchPowerLastDataPV {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastDataMain {
     grid_voltage: f32,
     grid_frequency: f32,
@@ -283,7 +284,7 @@ impl WatchPowerLastDataMain {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastData {
     timestamp: NaiveDate,
     grid: WatchPowerLastDataGrid,
