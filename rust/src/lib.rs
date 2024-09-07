@@ -311,7 +311,7 @@ impl WatchPowerLastData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WatchPowerAPI {
     _base_url: String,
     _suffix_context: String,
