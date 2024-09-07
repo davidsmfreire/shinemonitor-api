@@ -221,10 +221,10 @@ impl WatchPowerLastDataMain {
                 }
                 "bt_voltage_1" => {
                     pv_input_voltage = Some(field["val"].as_str().unwrap().parse::<f32>().unwrap())
-                }   
+                }
                 "bt_input_power" => {
                     pv_input_power = Some(field["val"].as_str().unwrap().parse::<i16>().unwrap())
-                }  
+                }
                 "bt_battery_voltage" => {
                     battery_voltage = Some(field["val"].as_str().unwrap().parse::<f32>().unwrap())
                 }
@@ -278,8 +278,7 @@ impl WatchPowerLastDataMain {
                 .expect("AC output apparent power not found"),
             ac_output_active_power: ac_output_active_power
                 .expect("AC output active power not found"),
-            output_load_percent: output_load_percent
-                .expect("Output load percent not found"),
+            output_load_percent: output_load_percent.expect("Output load percent not found"),
         }
     }
 }
@@ -298,7 +297,11 @@ impl WatchPowerLastData {
         let dat_field = &json["dat"];
         let pars_field = &dat_field["pars"];
         WatchPowerLastData {
-            timestamp: NaiveDate::parse_from_str(&dat_field["gts"].as_str().unwrap(), "%Y-%m-%d %H:%M:%S").unwrap(),
+            timestamp: NaiveDate::parse_from_str(
+                &dat_field["gts"].as_str().unwrap(),
+                "%Y-%m-%d %H:%M:%S",
+            )
+            .unwrap(),
             grid: WatchPowerLastDataGrid::from_json(&pars_field["gd_"]),
             system: WatchPowerLastDataSystem::from_json(&pars_field["sy_"]),
             pv: WatchPowerLastDataPV::from_json(&pars_field["pv_"]),
@@ -352,7 +355,11 @@ impl WatchPowerAPI {
         WatchPowerAPI::sha1_str_lower_case(arg_concat.as_bytes())
     }
 
-    pub fn login(&mut self, username: &str, password: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn login(
+        &mut self,
+        username: &str,
+        password: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let base_action = format!(
             "&action=authSource&usr={}&company-key={}{}",
             username, self._company_key, self._suffix_context
@@ -421,7 +428,10 @@ impl WatchPowerAPI {
         }
     }
 
-    fn get_daily_data(&self, day: NaiveDate) -> Result<WatchPowerDailyData, Box<dyn std::error::Error>> {
+    fn get_daily_data(
+        &self,
+        day: NaiveDate,
+    ) -> Result<WatchPowerDailyData, Box<dyn std::error::Error>> {
         let _date = day.format("%Y-%m-%d").to_string();
         let query = format!("&date={}", _date);
         match self._request("queryDeviceDataOneDay", Some(&query)) {
