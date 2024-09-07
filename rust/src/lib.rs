@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use reqwest::blocking::Client;
 use serde::Serialize;
 use sha1::{Digest, Sha1};
@@ -286,7 +286,7 @@ impl WatchPowerLastDataMain {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct WatchPowerLastData {
-    pub timestamp: NaiveDate,
+    pub timestamp: NaiveDateTime,
     pub grid: WatchPowerLastDataGrid,
     pub system: WatchPowerLastDataSystem,
     pub pv: WatchPowerLastDataPV,
@@ -298,7 +298,7 @@ impl WatchPowerLastData {
         let dat_field = &json["dat"];
         let pars_field = &dat_field["pars"];
         WatchPowerLastData {
-            timestamp: NaiveDate::parse_from_str(
+            timestamp: NaiveDateTime::parse_from_str(
                 &dat_field["gts"].as_str().unwrap(),
                 "%Y-%m-%d %H:%M:%S",
             )
