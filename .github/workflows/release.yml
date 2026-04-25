@@ -57,7 +57,7 @@ jobs:
 
   python:
     needs: [detect-changes, lint]
-    if: needs.detect-changes.outputs.python == 'true'
+    if: needs.detect-changes.outputs.python == 'true' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -74,7 +74,7 @@ jobs:
 
   rust:
     needs: [detect-changes, lint]
-    if: needs.detect-changes.outputs.rust == 'true'
+    if: needs.detect-changes.outputs.rust == 'true' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -103,6 +103,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: release
+    permissions:
+      id-token: write # PyPI Trusted Publisher (OIDC)
     defaults:
       run:
         working-directory: python
@@ -112,10 +114,8 @@ jobs:
           fetch-depth: 0
       - uses: astral-sh/setup-uv@v3
       - run: uv build
-      - name: Publish to PyPI
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: uv publish
+      - name: Publish to PyPI (trusted publisher)
+        run: uv publish --trusted-publishing always
 
   release-rust:
     needs: [python, rust]
