@@ -34,10 +34,7 @@ impl ApiError {
     }
 
     fn from_payload(payload: serde_json::Value) -> Self {
-        let err = payload
-            .get("err")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(-1);
+        let err = payload.get("err").and_then(|v| v.as_i64()).unwrap_or(-1);
         let desc = payload
             .get("desc")
             .and_then(|v| v.as_str())
@@ -57,7 +54,11 @@ impl ApiError {
 
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "shinemonitor: err=0x{:04X} desc={:?}", self.err, self.desc)
+        write!(
+            f,
+            "shinemonitor: err=0x{:04X} desc={:?}",
+            self.err, self.desc
+        )
     }
 }
 
@@ -383,7 +384,12 @@ impl ShineMonitorAPI {
             _secret: "ems_secret".to_string(),
             _expire: None,
             _client: Client::new(),
-            _device_params: ShineMonitorDeviceParams{serial_number: serial_number.to_string(), wifi_pn: wifi_pn.to_string(), dev_code: dev_code, dev_addr: dev_addr},
+            _device_params: ShineMonitorDeviceParams {
+                serial_number: serial_number.to_string(),
+                wifi_pn: wifi_pn.to_string(),
+                dev_code,
+                dev_addr,
+            },
         }
     }
 

@@ -104,9 +104,7 @@ fn build_api(base_url: &str) -> ShineMonitorAPI {
 #[test]
 fn login_and_get_last_data() {
     let Some(python) = find_python() else {
-        eprintln!(
-            "skipping mock test: set SHINEMONITOR_MOCK_PYTHON or run `uv sync` in python/"
-        );
+        eprintln!("skipping mock test: set SHINEMONITOR_MOCK_PYTHON or run `uv sync` in python/");
         return;
     };
 
@@ -126,9 +124,7 @@ fn login_and_get_last_data() {
 #[test]
 fn login_bad_password_returns_error() {
     let Some(python) = find_python() else {
-        eprintln!(
-            "skipping mock test: set SHINEMONITOR_MOCK_PYTHON or run `uv sync` in python/"
-        );
+        eprintln!("skipping mock test: set SHINEMONITOR_MOCK_PYTHON or run `uv sync` in python/");
         return;
     };
 
@@ -149,7 +145,8 @@ fn daily_data_returns_payload() {
 
     let server = MockServer::spawn(&python);
     let mut api = build_api(&server.url);
-    api.login(FIXTURE_USERNAME, FIXTURE_PASSWORD).expect("login");
+    api.login(FIXTURE_USERNAME, FIXTURE_PASSWORD)
+        .expect("login");
     let day = chrono::NaiveDate::from_ymd_opt(2026, 4, 25).unwrap();
     let raw = api.get_daily_data(day).expect("daily_data");
     let row_count = raw["dat"]["row"].as_array().map(|a| a.len()).unwrap_or(0);
