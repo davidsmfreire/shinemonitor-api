@@ -6,11 +6,12 @@ vendor apps for Voltronic-derived inverters.
 
 ## Layout
 
-| Path      | What                                           |
-| --------- | ---------------------------------------------- |
-| `spec/`   | API schemas — source of truth for both clients |
-| `python/` | Python client (`shinemonitor-api` on PyPI)     |
-| `rust/`   | Rust client (`shinemonitor-api` on crates.io)  |
+| Path                 | What                                           |
+| -------------------- | ---------------------------------------------- |
+| `spec/`              | API schemas — source of truth for both clients |
+| `python/`            | Python client (`shinemonitor-api` on PyPI)     |
+| `rust/`              | Rust client (`shinemonitor-api` on crates.io)  |
+| `custom_components/` | Home Assistant integration (HACS-installable)  |
 
 Both clients release in lockstep from a single `vX.Y.Z` git tag.
 
@@ -18,6 +19,9 @@ Both clients release in lockstep from a single `vX.Y.Z` git tag.
 
 - Python: see [`python/README.md`](python/README.md)
 - Rust: see [`rust/`](rust/) — `cargo add shinemonitor-api`
+- Home Assistant: add this repo as a HACS custom repository (type:
+  _Integration_) and install **ShineMonitor**. See
+  [`info.md`](info.md).
 
 ## Releasing
 

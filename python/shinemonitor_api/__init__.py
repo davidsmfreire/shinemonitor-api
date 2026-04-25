@@ -1,10 +1,14 @@
 from datetime import date
+import hashlib
+import logging
 import time
 from typing import Any, Optional
-import requests
-import hashlib
 
-from shinemonitor_api.models import DeviceIdentifier
+import requests
+
+from shinemonitor_api.models import DeviceIdentifier, LastData, parse_last_data
+
+_LOGGER = logging.getLogger(__name__)
 
 __version__ = "0.4.0"
 
@@ -75,7 +79,7 @@ class ShineMonitorAPI:
         if response.status_code == 200:
             error_code: int = response_data["err"]
             if error_code == 0:
-                print("Login successful!")
+                _LOGGER.debug("Login successful")
                 self.secret = response_data["dat"]["secret"]
                 self.token = response_data["dat"]["token"]
                 self.expire = response_data["dat"]["expire"]
@@ -181,3 +185,34 @@ class ShineMonitorAPI:
             dev_code=device_identifier.device_code,
             dev_addr=device_identifier.device_address,
         )
+
+    def get_last_data(self, device: DeviceIdentifier) -> LastData:
+        """Get the latest snapshot of inverter readings.
+
+        Args:
+            device: Inverter identifier (from .get_devices()).
+
+        Raises:
+            RuntimeError: HTTP or API error.
+
+        Returns:
+            Parsed LastData with grid/system/pv/main subgroups.
+        """
+        token, secret = self._ensure_logged_in()
+        base_action = (
+            f"&action=querySPDeviceLastData&pn={device.wifi_pin}&devcode={device.device_code}"
+            f"&sn={device.serial_number}&devaddr={device.device_address}"
+            + self._SUFFIX_CONTEXT
+        )
+        salt = self._generate_salt()
+        sign = self._hash(salt, secret, token, base_action)
+        auth = f"?sign={sign}&salt={salt}&token={self.token}"
+        url = self._BASE_URL + auth + base_action
+        response = requests.get(url, timeout=10)
+
+        if response.status_code != 200:
+            raise RuntimeError(response.status_code)
+        response_data: dict[str, Any] = response.json()
+        if response_data["err"] != 0:
+            raise RuntimeError(response_data)
+        return parse_last_data(response_data)

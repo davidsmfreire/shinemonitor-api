@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ShineMonitor account",
+        "description": "Enter the credentials you use in the WatchPower / SolarPower / ShineMonitor app.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate ShineMonitor",
+        "description": "The password for {username} stopped working. Enter the new one.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "grid_voltage": { "name": "Grid voltage" },
+      "grid_frequency": { "name": "Grid frequency" },
+      "ac_output_voltage": { "name": "AC output voltage" },
+      "ac_output_frequency": { "name": "AC output frequency" },
+      "ac_output_active_power": { "name": "AC output active power" },
+      "ac_output_apparent_power": { "name": "AC output apparent power" },
+      "output_load_percent": { "name": "Output load" },
+      "pv_input_voltage": { "name": "PV input voltage" },
+      "pv_input_power": { "name": "PV input power" },
+      "battery_voltage": { "name": "Battery voltage" },
+      "battery_capacity": { "name": "Battery capacity" },
+      "battery_charging_current": { "name": "Battery charging current" },
+      "battery_discharge_current": { "name": "Battery discharge current" }
+    }
+  }
+}

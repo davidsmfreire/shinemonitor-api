@@ -1,6 +1,7 @@
-from typing import Optional
-from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Any, Optional
 
+from pydantic import BaseModel, Field
 from pydantic.version import VERSION as _PYDANTIC_VERSION
 
 PYDANTIC_VERSION: str = str(_PYDANTIC_VERSION)
@@ -9,16 +10,137 @@ if PYDANTIC_VERSION.startswith("2."):
     from pydantic import ConfigDict
 
 
-class DeviceIdentifier(BaseModel):
-    device_alias: Optional[str] = Field(default=None, alias="devalias")
-    serial_number: str = Field(..., alias="sn")
-    wifi_pin: str = Field(..., alias="pn")
-    device_address: int = Field(..., alias="devaddr")
-    device_code: int = Field(..., alias="devcode")
-
+class _PopulateByNameMixin(BaseModel):
     if PYDANTIC_VERSION.startswith("2."):
         model_config = ConfigDict(populate_by_name=True)
     else:
 
         class Config:
             allow_population_by_field_name = True
+
+
+class DeviceIdentifier(_PopulateByNameMixin):
+    device_alias: Optional[str] = Field(default=None, alias="devalias")
+    serial_number: str = Field(..., alias="sn")
+    wifi_pin: str = Field(..., alias="pn")
+    device_address: int = Field(..., alias="devaddr")
+    device_code: int = Field(..., alias="devcode")
+
+
+class LastDataGrid(BaseModel):
+    grid_rating_voltage: float
+    grid_rating_current: float
+    battery_rating_voltage: float
+    ac_output_rating_voltage: float
+    ac_output_rating_current: float
+    ac_output_rating_frequency: float
+    ac_output_rating_apparent_power: int
+    ac_output_rating_active_power: int
+
+
+class LastDataSystem(BaseModel):
+    model: str
+    main_cpu_firmware_version: str
+    secondary_cpu_firmware_version: str
+
+
+class LastDataPV(BaseModel):
+    pv_input_current: float
+
+
+class LastDataMain(BaseModel):
+    grid_voltage: float
+    grid_frequency: float
+    pv_input_voltage: float
+    pv_input_power: int
+    battery_voltage: float
+    battery_capacity: int
+    battery_charging_current: float
+    battery_discharge_current: float
+    ac_output_voltage: float
+    ac_output_frequency: float
+    ac_output_apparent_power: int
+    ac_output_active_power: int
+    output_load_percent: int
+
+
+class LastData(BaseModel):
+    timestamp: datetime
+    grid: LastDataGrid
+    system: LastDataSystem
+    pv: LastDataPV
+    main: LastDataMain
+
+
+_GRID_FIELDS: dict[str, tuple[str, type]] = {
+    "gd_grid_rating_voltage": ("grid_rating_voltage", float),
+    "gd_grid_rating_current": ("grid_rating_current", float),
+    "gd_battery_rating_voltage": ("battery_rating_voltage", float),
+    "gd_bse_input_voltage_read": ("ac_output_rating_voltage", float),
+    "gd_ac_output_rating_current": ("ac_output_rating_current", float),
+    "gd_bse_output_frequency_read": ("ac_output_rating_frequency", float),
+    "gd_ac_output_rating_apparent_power": ("ac_output_rating_apparent_power", int),
+    "gd_ac_output_rating_active_power": ("ac_output_rating_active_power", int),
+}
+
+_SYSTEM_FIELDS: dict[str, str] = {
+    "sy_model": "model",
+    "sy_main_cpu1_firmware_version": "main_cpu_firmware_version",
+    "sy_main_cpu2_firmware_version": "secondary_cpu_firmware_version",
+}
+
+_PV_FIELDS: dict[str, tuple[str, type]] = {
+    "pv_input_current": ("pv_input_current", float),
+}
+
+_MAIN_FIELDS: dict[str, tuple[str, type]] = {
+    "bt_grid_voltage": ("grid_voltage", float),
+    "bt_grid_frequency": ("grid_frequency", float),
+    "bt_voltage_1": ("pv_input_voltage", float),
+    "bt_input_power": ("pv_input_power", int),
+    "bt_battery_voltage": ("battery_voltage", float),
+    "bt_battery_capacity": ("battery_capacity", int),
+    "bt_battery_charging_current": ("battery_charging_current", float),
+    "bt_battery_discharge_current": ("battery_discharge_current", float),
+    "bt_ac_output_voltage": ("ac_output_voltage", float),
+    "bt_grid_AC_frequency": ("ac_output_frequency", float),
+    "bt_ac_output_apparent_power": ("ac_output_apparent_power", int),
+    "bt_load_active_power_sole": ("ac_output_active_power", int),
+    "bt_output_load_percent": ("output_load_percent", int),
+}
+
+
+def _parse_typed(
+    fields: list[dict[str, Any]], mapping: dict[str, tuple[str, type]]
+) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for entry in fields:
+        spec = mapping.get(entry.get("id", ""))
+        if spec is None:
+            continue
+        name, caster = spec
+        out[name] = caster(entry["val"])
+    return out
+
+
+def _parse_strings(
+    fields: list[dict[str, Any]], mapping: dict[str, str]
+) -> dict[str, str]:
+    return {
+        mapping[entry["id"]]: entry["val"]
+        for entry in fields
+        if entry.get("id") in mapping
+    }
+
+
+def parse_last_data(response: dict[str, Any]) -> LastData:
+    """Parse a `querySPDeviceLastData` response into a `LastData` model."""
+    dat = response["dat"]
+    pars = dat["pars"]
+    return LastData(
+        timestamp=datetime.strptime(dat["gts"], "%Y-%m-%d %H:%M:%S"),
+        grid=LastDataGrid(**_parse_typed(pars["gd_"], _GRID_FIELDS)),
+        system=LastDataSystem(**_parse_strings(pars["sy_"], _SYSTEM_FIELDS)),
+        pv=LastDataPV(**_parse_typed(pars["pv_"], _PV_FIELDS)),
+        main=LastDataMain(**_parse_typed(pars["bt_"], _MAIN_FIELDS)),
+    )

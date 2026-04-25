@@ -1,0 +1,11 @@
+{
+  "domain": "shinemonitor",
+  "name": "ShineMonitor",
+  "codeowners": ["@davidsmfreire"],
+  "config_flow": true,
+  "documentation": "https://github.com/davidsmfreire/shinemonitor-api",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/davidsmfreire/shinemonitor-api/issues",
+  "requirements": ["shinemonitor-api==0.4.0"],
+  "version": "0.1.0"
+}
