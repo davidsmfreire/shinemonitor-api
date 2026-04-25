@@ -3,9 +3,14 @@ name = "shinemonitor-api"
 version = "0.6.4"
 authors = ["David Freire"]
 edition = "2021"
-description = "ShineMonitor RestAPI client (WatchPower, SolarPower, etc.)"
+description = "ShineMonitor REST API client (WatchPower, SolarPower, and other Voltronic-inverter vendor apps)."
 repository = "https://github.com/davidsmfreire/shinemonitor-api"
+homepage = "https://github.com/davidsmfreire/shinemonitor-api"
+documentation = "https://docs.rs/shinemonitor-api"
+readme = "README.md"
 license = "MIT"
+keywords = ["shinemonitor", "watchpower", "solar", "inverter", "voltronic"]
+categories = ["api-bindings"]
 
 [lib]
 name = "shinemonitor_api"
