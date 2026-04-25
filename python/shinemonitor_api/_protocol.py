@@ -68,10 +68,19 @@ def login_url(config: ProtocolConfig, username: str, password: str) -> str:
     return f"{config.base_url}?sign={sign}&salt={salt}{base_action}"
 
 
-def _authed_url(config: ProtocolConfig, auth: AuthState, base_action: str) -> str:
+def authed_url(config: ProtocolConfig, auth: AuthState, base_action: str) -> str:
+    """Sign and assemble an authed request URL.
+
+    Public so that the generated `_actions.py` can call it without
+    reaching past a leading underscore.
+    """
     salt = _salt()
     sign = _hash(salt, auth.secret, auth.token, base_action)
     return f"{config.base_url}?sign={sign}&salt={salt}&token={auth.token}{base_action}"
+
+
+# Back-compat alias for handwritten callers in this module.
+_authed_url = authed_url
 
 
 def devices_url(config: ProtocolConfig, auth: AuthState) -> str:
@@ -135,13 +144,22 @@ _AUTH_ERR_CODES: frozenset[int] = frozenset(
 )
 
 
-def _check(payload: dict[str, Any]) -> dict[str, Any]:
+def check_response(payload: dict[str, Any]) -> dict[str, Any]:
+    """Raise if the vendor `err` is non-zero, else return the payload.
+
+    Public so the generated `_actions.py` parsers can reuse the same
+    error-band logic the handwritten parsers use.
+    """
     err = payload.get("err")
     if err == 0:
         return payload
     if isinstance(err, int) and err in _AUTH_ERR_CODES:
         raise ShineMonitorAuthError(payload)
     raise ShineMonitorError(payload)
+
+
+# Back-compat alias for handwritten callers in this module.
+_check = check_response
 
 
 def parse_login(payload: dict[str, Any]) -> AuthState:

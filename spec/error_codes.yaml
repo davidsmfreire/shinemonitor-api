@@ -1,0 +1,107 @@
+# Source: https://api.shinemonitor.com/chapter1/errCode.html
+# Mirrored 2026-04-25.
+#
+# Each entry: HEX_CODE -> [SYMBOLIC_NAME, ENGLISH_DESCRIPTION].
+# Codegen turns this into language-specific enums/constants.
+
+0x0000: [ERR_NONE, "Normal, no error"]
+0x0001: [ERR_FAIL, "Failure"]
+0x0002: [ERR_TIMEOUT, "Timeout"]
+0x0003: [ERR_SYSTEM_EXCEPTION, "System exception"]
+0x0004: [ERR_SIGN, "Unverifiable signature"]
+0x0005: [ERR_SALT, "Salt value error"]
+0x0006: [ERR_FORMAT_ERROR, "Parameter format error"]
+0x0007: [ERR_MISSING_PARAMETER, "Missing required parameter"]
+0x0008: [ERR_FORBIDDEN, "Platform rejection"]
+0x0009: [ERR_UNSUPPORTED, "Unsupported operation"]
+0x000A: [ERR_NO_AUTH, "Authentication failed"]
+0x000B: [ERR_NO_PERMISSION, "Unauthorized operation"]
+0x000C: [ERR_NO_RECORD, "No record found"]
+0x000D: [ERR_OVER_LIMITED, "Limit exceeded"]
+0x000E: [ERR_DUPLICATE_OPER, "Duplicate operation"]
+0x000F: [ERR_NOT_FOUND_COMPANY_KEY, "Manufacturer key not found"]
+0x0010: [ERR_PASSWORD_VERIF_FAIL, "Password verification failed"]
+0x0011: [ERR_PASSWORD_FORMAT_ERROR, "Invalid password format"]
+0x0012: [ERR_MOBILE_BINDED, "Phone number already bound"]
+0x0013: [ERR_MOBILE_FORMAT, "Invalid phone format"]
+0x0014: [ERR_EMAIL_FORMAT, "Invalid email format"]
+0x0015: [ERR_USRNAME_FORMAT, "Invalid username format"]
+0x0016: [ERR_COMPANY_NAME_FORMAT, "Invalid company name format"]
+0x0017: [ERR_VCODE_INVALID, "Invalid manufacturer code"]
+0x0018: [ERR_USR_NAME_DUPLICATE, "Duplicate username"]
+0x0019: [ERR_USR_DISABLED, "Account frozen"]
+0x0100: [ERR_NOT_FOUND_API, "API not found"]
+0x0101: [ERR_NOT_FOUND_COLLECTOR, "Data collector not found"]
+0x0102: [ERR_NOT_FOUND_DEVICE, "Device not found"]
+0x0103: [ERR_INVALID_PN, "Invalid collector number"]
+0x0104: [ERR_NOT_FOUND_PLANT, "Plant not found"]
+0x0105: [ERR_NOT_FOUND_USR, "User not found"]
+0x0106: [ERR_DEVICE_OFFLINE, "Device offline"]
+0x0107: [ERR_COLLECTOR_OFFLINE, "Collector offline"]
+0x0108: [ERR_NOT_FOUND_DEVICE_WARNING, "Device warning not found"]
+0x0109: [ERR_NOT_FOUND_ENVMONITOR, "Environmental monitor not found"]
+0x010E:
+  [
+    ERR_TOKEN_INVALID,
+    "Token expired or invalid (commonly observed; not in vendor table)",
+  ]
+0x010F: [ERR_NONE_OPERATION, "No modifications made"]
+0x0110: [ERR_DUPLICATE_OPER_BIND, "Duplicate binding"]
+0x0111:
+  [
+    ERR_NOT_SUPPORT_ADD_OTHER_VCODE_COLLECTOR,
+    "Cannot add collectors from other manufacturers",
+  ]
+0x0112: [ERR_USR_BIND_WX_BIND, "Account already bound to WeChat"]
+0x0113: [ERR_NOT_BIND_WX, "Account not bound to WeChat"]
+0x0114:
+  [
+    ERR_NOT_SUPPORT_MOVE_OTHER_VCODE_COLLECTOR_PLANTOWNER,
+    "Cannot move plant owner with foreign collectors",
+  ]
+0x0115: [ERR_NOT_FOUND_VENDOR, "Vendor not found"]
+0x0120: [ERR_NOT_FOUND_CAMERA, "Camera not found"]
+0x0160: [ERR_NOT_FOUND_FIREWARE, "Firmware not found"]
+0x0161: [ERR_NOT_FOUND_PROTOCOL, "Protocol not found"]
+0x0170: [ERR_NOT_FOUND_DEFINEDROLE, "Role not found"]
+0x0171: [ERR_NOT_FOUND_USR_GROUP, "User group not found"]
+0x0172: [ERR_NOT_FOUND_PLANT_GROUP, "Plant group not found"]
+0x0173: [ERR_NOT_FOUND_GPRS_TARIFFPACKAGE, "GPRS package not found"]
+0x0174: [ERR_NOT_FOUND_RECHARGE_ORDER, "Recharge order not found"]
+0x0180: [ERR_NOT_FOUND_SMSCODE, "SMS code not found"]
+0x0181: [ERR_NOT_FOUND_DEVICE_TOKEN, "Device token not found"]
+0x0182: [ERR_NOT_FOUND_DEVICE_CFG, "Device config not found"]
+0x0183: [ERR_NOT_FOUND_COLLECTOR_TYPE, "Collector type not found"]
+0x0184: [ERR_NOT_FOUND_PERMISSION_GROUP, "Permission group not found"]
+0x0185: [ERR_NOT_SETTING_LONLAT, "Coordinates not set"]
+0x0200: [ERR_SMSCODE_DISMATCH, "SMS code mismatch"]
+0x0201: [ERR_SMSCODE_OVERTIME, "SMS code expired"]
+0x0202: [ERR_MOBILE_UNBINDED, "Phone not bound"]
+0x0203: [ERR_MOBILE_UNMATCH, "Phone mismatch"]
+0x0204: [ERR_NAME_DUPLICATE, "Duplicate name"]
+0x0205: [ERR_COLLECOTR_ISNOT_EMPTY, "Collectors still exist"]
+0x0206: [ERR_SUBUSR_ISNOT_EMPTY, "Sub-users still exist"]
+0x0207: [ERR_USR_EXISTED, "User already exists"]
+0x0208: [ERR_PN_REGISTER, "Collector number registered"]
+0x0209: [ERR_COLLECTOR_NOTBELONG_USR, "Collector not owned by user"]
+0x020A: [ERR_COLLECTOR_EXISTED, "Collector already exists"]
+0x020B: [ERR_NOT_PLANTBROWSER, "Not a viewer account"]
+0x020C: [ERR_SMSCODE_TO_SHORT, "SMS code sent too soon"]
+0x0300: [ERR_PROTOCOL_NOT_OPTION, "No optional fields in protocol"]
+0x0400: [ERR_OLNY_SUPPORT_PLANTOWNER, "Only plant owners supported"]
+0x0401: [ERR_OLNY_SUPPORT_DIST, "Only distributors supported"]
+0x0402: [ERR_OLNY_SUPPORT_VERDOR, "Only manufacturers supported"]
+0x0403:
+  [ERR_SUPERIOR_DIST_VERDOR, "Superior must be distributor or manufacturer"]
+0x0404: [ERR_UNSUPPORTED_CHARGE_TYPE, "Unsupported recharge method"]
+0x0405: [ERR_DUPLICATE_PN, "Duplicate collector number"]
+0x0406: [ERR_INVALID_GPRS_CARD, "Invalid GPRS card"]
+0x0407: [ERR_USR_NOT_CREATE_ADMIN, "User not created by admin"]
+0x0408:
+  [ERR_SUPPORT_DIST_VERDOR, "Only manufacturers and distributors supported"]
+0x0409: [ERR_NOT_CONFIRM, "QR code not scanned"]
+0x0410: [ERR_ACCEPT, "Scanned but not confirmed"]
+0x0411: [ERR_QR_KEY_INVALID, "Invalid or expired QR key"]
+0x0412: [ERR_INVALID_CCID, "Invalid CCID"]
+0x0700:
+  [ERR_COLLECTORS_NOT_ONLY_BELONG_DIST, "Collectors must belong to distributor"]

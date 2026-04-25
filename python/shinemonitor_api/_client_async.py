@@ -10,14 +10,19 @@ from typing import Any
 import httpx
 
 from . import _protocol as _p
+from ._methods import AsyncActionsMixin
 from .models import DeviceIdentifier, LastData
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_TIMEOUT = 10.0
 
 
-class AsyncShineMonitorAPI:
-    """Asynchronous client for the ShineMonitor REST API."""
+class AsyncShineMonitorAPI(AsyncActionsMixin):
+    """Asynchronous client for the ShineMonitor REST API.
+
+    Inherits 30+ generated `query_*` / `ctrl_*` action methods from
+    `AsyncActionsMixin`; overrides the few that need bespoke parsing.
+    """
 
     def __init__(
         self,

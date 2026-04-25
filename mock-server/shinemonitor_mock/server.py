@@ -211,7 +211,14 @@ def create_app() -> FastAPI:
         if action == "queryDeviceDataOneDay":
             return _ok({"title": DAILY_DATA_TITLES, "row": DAILY_DATA_ROWS})
 
-        return _err(0x0001, "ERR_UNKNOWN_ACTION")
+        # Generated handlers for everything else documented in spec/endpoints.yaml.
+        from ._actions import HANDLERS
+
+        handler = HANDLERS.get(action)
+        if handler is not None:
+            return handler(params)
+
+        return _err(0x0100, "ERR_NOT_FOUND_API")
 
     return app
 

@@ -28,40 +28,40 @@ class DeviceIdentifier(_PopulateByNameMixin):
 
 
 class LastDataGrid(BaseModel):
-    grid_rating_voltage: float
-    grid_rating_current: float
-    battery_rating_voltage: float
-    ac_output_rating_voltage: float
-    ac_output_rating_current: float
-    ac_output_rating_frequency: float
-    ac_output_rating_apparent_power: int
-    ac_output_rating_active_power: int
+    grid_rating_voltage: Optional[float] = None
+    grid_rating_current: Optional[float] = None
+    battery_rating_voltage: Optional[float] = None
+    ac_output_rating_voltage: Optional[float] = None
+    ac_output_rating_current: Optional[float] = None
+    ac_output_rating_frequency: Optional[float] = None
+    ac_output_rating_apparent_power: Optional[int] = None
+    ac_output_rating_active_power: Optional[int] = None
 
 
 class LastDataSystem(BaseModel):
-    model: str
-    main_cpu_firmware_version: str
-    secondary_cpu_firmware_version: str
+    model: Optional[str] = None
+    main_cpu_firmware_version: Optional[str] = None
+    secondary_cpu_firmware_version: Optional[str] = None
 
 
 class LastDataPV(BaseModel):
-    pv_input_current: float
+    pv_input_current: Optional[float] = None
 
 
 class LastDataMain(BaseModel):
-    grid_voltage: float
-    grid_frequency: float
-    pv_input_voltage: float
-    pv_input_power: int
-    battery_voltage: float
-    battery_capacity: int
-    battery_charging_current: float
-    battery_discharge_current: float
-    ac_output_voltage: float
-    ac_output_frequency: float
-    ac_output_apparent_power: int
-    ac_output_active_power: int
-    output_load_percent: int
+    grid_voltage: Optional[float] = None
+    grid_frequency: Optional[float] = None
+    pv_input_voltage: Optional[float] = None
+    pv_input_power: Optional[int] = None
+    battery_voltage: Optional[float] = None
+    battery_capacity: Optional[int] = None
+    battery_charging_current: Optional[float] = None
+    battery_discharge_current: Optional[float] = None
+    ac_output_voltage: Optional[float] = None
+    ac_output_frequency: Optional[float] = None
+    ac_output_apparent_power: Optional[int] = None
+    ac_output_active_power: Optional[int] = None
+    output_load_percent: Optional[int] = None
 
 
 class LastData(BaseModel):
@@ -133,12 +133,23 @@ def _parse_strings(
     }
 
 
+def _parse_gts(raw: Any) -> datetime:
+    """Vendor returns `gts` as either `yyyy-mm-dd HH:MM:SS` or millisecond
+    epoch (string of digits). Handle both."""
+    if isinstance(raw, (int, float)):
+        return datetime.fromtimestamp(int(raw) / 1000.0)
+    s = str(raw).strip()
+    if s.isdigit():
+        return datetime.fromtimestamp(int(s) / 1000.0)
+    return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+
+
 def parse_last_data(response: dict[str, Any]) -> LastData:
     """Parse a `querySPDeviceLastData` response into a `LastData` model."""
     dat = response["dat"]
     pars = dat["pars"]
     return LastData(
-        timestamp=datetime.strptime(dat["gts"], "%Y-%m-%d %H:%M:%S"),
+        timestamp=_parse_gts(dat["gts"]),
         grid=LastDataGrid(**_parse_typed(pars["gd_"], _GRID_FIELDS)),
         system=LastDataSystem(**_parse_strings(pars["sy_"], _SYSTEM_FIELDS)),
         pv=LastDataPV(**_parse_typed(pars["pv_"], _PV_FIELDS)),

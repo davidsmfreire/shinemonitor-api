@@ -1,25 +1,33 @@
-"""Pull a live snapshot for every inverter on the account, async."""
+"""Pull a live snapshot for a known inverter, async."""
 
 import asyncio
 import os
 
 from dotenv import load_dotenv
 from shinemonitor_api.aio import AsyncShineMonitorAPI
+from shinemonitor_api.models import DeviceIdentifier
 
 load_dotenv()
 USERNAME = os.environ["USERNAME"]
 PASSWORD = os.environ["PASSWORD"]
+SERIAL_NUMBER = os.environ["SERIAL_NUMBER"]
+WIFI_PN = os.environ["WIFI_PN"]
+DEV_CODE = int(os.environ["DEV_CODE"])
+DEV_ADDR = int(os.environ["DEV_ADDR"])
 
 
 async def main() -> None:
+    device = DeviceIdentifier(
+        sn=SERIAL_NUMBER,
+        pn=WIFI_PN,
+        devcode=DEV_CODE,
+        devaddr=DEV_ADDR,
+        devalias=None,
+    )
     async with AsyncShineMonitorAPI() as api:
         await api.login(USERNAME, PASSWORD)
-        devices = await api.get_devices()
-        snapshots = await asyncio.gather(
-            *(api.get_last_data(device) for device in devices)
-        )
-        for device, snapshot in zip(devices, snapshots):
-            print(f"{device.device_alias or device.serial_number}: {snapshot.main}")
+        snapshot = await api.get_last_data(device)
+        print(snapshot.main)
 
 
 if __name__ == "__main__":

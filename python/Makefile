@@ -8,5 +8,8 @@ build:
 test:
 	uv run pytest tests/
 
+codegen:
+	uv run --with pyyaml python ../scripts/codegen.py
+
 lock:
 	uv lock

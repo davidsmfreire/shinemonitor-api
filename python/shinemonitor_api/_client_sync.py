@@ -10,14 +10,20 @@ from typing import Any
 import httpx
 
 from . import _protocol as _p
+from ._methods import SyncActionsMixin
 from .models import DeviceIdentifier, LastData
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_TIMEOUT = 10.0
 
 
-class ShineMonitorAPI:
-    """Synchronous client for the ShineMonitor REST API."""
+class ShineMonitorAPI(SyncActionsMixin):
+    """Synchronous client for the ShineMonitor REST API.
+
+    Inherits 30+ generated `query_*` / `ctrl_*` action methods from
+    `SyncActionsMixin`; overrides the few that need bespoke parsing
+    (login, get_devices, get_last_data, get_daily_data).
+    """
 
     def __init__(
         self,

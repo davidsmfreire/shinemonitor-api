@@ -110,6 +110,22 @@ def test_non_auth_error_raises_generic() -> None:
     assert excinfo.value.desc == "ERR_DEVICE_NOT_FOUND"
 
 
+def test_parse_last_accepts_epoch_ms_gts() -> None:
+    """Real responses sometimes return gts as a millisecond timestamp string."""
+    from shinemonitor_api.models import _parse_gts
+
+    parsed = _parse_gts("1777101032550")
+    assert parsed.year == 2026
+
+
+def test_parse_last_accepts_formatted_gts() -> None:
+    from shinemonitor_api.models import _parse_gts
+
+    parsed = _parse_gts("2026-04-25 09:00:00")
+    assert parsed.year == 2026
+    assert parsed.hour == 9
+
+
 def test_parse_last_round_trips_main_fields() -> None:
     snapshot = parse_last(
         {

@@ -1,0 +1,470 @@
+# Machine-readable catalog of ShineMonitor REST endpoints.
+#
+# Source: https://api.shinemonitor.com/ — each entry's `doc` points to
+# the upstream HTML page for the endpoint. Codegen reads this file and
+# produces:
+#   - python/shinemonitor_api/_actions.py (URL builders + parsers)
+#   - python/shinemonitor_api/_actions_methods.py (mixin with .{action}() methods)
+#   - mock-server/shinemonitor_mock/_actions.py (canned-response handlers)
+#
+# Population is incremental — chapters are added one at a time.
+# Re-run `python scripts/codegen.py` after edits.
+#
+# Per-endpoint shape:
+#   action: <vendor action string>
+#   chapter: <vendor chapter id, e.g. "5">
+#   doc: <relative URL on the vendor docs site>
+#   auth: bool                # whether token+secret signing is required
+#   params:
+#     - {name: str, type: str, required: bool, doc: str}
+#   returns: free-form description of `dat` payload — not yet a strict schema
+#   mock_response:            # canned response served by the mock; `dat` only
+#     <free-form JSON>
+
+version: 1
+base_action_template: "&action={action}"
+default_suffix_required:
+  true # all non-auth requests append the standard
+  # &i18n=&lang=&source=&_app_*_= context
+
+endpoints:
+  # ---------------------------------------------------------------------
+  # Chapter 2 — account management
+  # ---------------------------------------------------------------------
+  - action: authSource
+    chapter: "2"
+    doc: chapter2/auth.html
+    auth: false
+    params:
+      - { name: usr, type: string, required: true, doc: "Account username" }
+      - {
+          name: company-key,
+          type: string,
+          required: true,
+          doc: "Vendor identifier",
+        }
+    sign: "SHA-1(salt + SHA-1(pwd) + base_action)"
+    returns: "{token, secret, expire, role}"
+
+  - action: auth
+    chapter: "2"
+    doc: chapter2/auth.html
+    auth: false
+    params:
+      - { name: usr, type: string, required: true, doc: "Account username" }
+      - {
+          name: company-key,
+          type: string,
+          required: true,
+          doc: "Vendor identifier",
+        }
+    sign: "SHA-1(salt + SHA-1(pwd) + base_action)"
+    returns: "{token, secret, expire, role}"
+
+  - action: updateToken
+    chapter: "2"
+    doc: chapter2/updateToken.html
+    auth: true
+    params: []
+    returns: "{token, secret, expire}"
+
+  - action: queryAccountInfo
+    chapter: "2"
+    doc: chapter2/queryAccountInfo.html
+    auth: true
+    params: []
+    returns: "{usr, name, mobile, email, role, ...}"
+
+  - action: updatePassword
+    chapter: "2"
+    doc: chapter2/updatePassword.html
+    auth: true
+    params:
+      - {
+          name: oldPwd,
+          type: string,
+          required: true,
+          doc: "SHA-1 of old password",
+        }
+      - {
+          name: newPwd,
+          type: string,
+          required: true,
+          doc: "SHA-1 of new password",
+        }
+    returns: "(empty on success)"
+
+  # ---------------------------------------------------------------------
+  # Chapter 3 — plants
+  # ---------------------------------------------------------------------
+  - action: queryPlants
+    chapter: "3"
+    doc: chapter3/queryPlants.html
+    auth: true
+    params:
+      - { name: status, type: int, required: false, doc: "Plant status filter" }
+      - {
+          name: orderBy,
+          type: string,
+          required: false,
+          doc: "ascPlantName|descPlantName|ascInstall|descInstall|ascStatus|descStatus",
+        }
+      - {
+          name: plantName,
+          type: string,
+          required: false,
+          doc: "Fuzzy name match",
+        }
+      - { name: page, type: int, required: false, doc: "Page index from 0" }
+      - { name: pagesize, type: int, required: false, doc: "1-50; default 1" }
+    returns: "{total, page, pagesize, plant: [...]}"
+
+  - action: queryPlantInfo
+    chapter: "3"
+    doc: chapter3/queryPlantInfo.html
+    auth: true
+    params:
+      - { name: plantid, type: int, required: true, doc: "Plant id" }
+    returns: "{pid, uid, name, status, address, profit, nominalPower, ...}"
+
+  - action: queryPlantCount
+    chapter: "3"
+    doc: chapter3/queryPlantCount.html
+    auth: true
+    params: []
+    returns: "{count: int}"
+
+  - action: queryPlantEnergyDay
+    chapter: "3"
+    doc: chapter3/queryPlantEnergyDay.html
+    auth: true
+    params:
+      - { name: plantid, type: int, required: true, doc: "Plant id" }
+      - { name: date, type: string, required: true, doc: "yyyy-mm-dd" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryPlantEnergyMonth
+    chapter: "3"
+    doc: chapter3/queryPlantEnergyMonth.html
+    auth: true
+    params:
+      - { name: plantid, type: int, required: true, doc: "Plant id" }
+      - { name: date, type: string, required: true, doc: "yyyy-mm" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryPlantEnergyYear
+    chapter: "3"
+    doc: chapter3/queryPlantEnergyYear.html
+    auth: true
+    params:
+      - { name: plantid, type: int, required: true, doc: "Plant id" }
+      - { name: date, type: string, required: true, doc: "yyyy" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryPlantEnergyTotal
+    chapter: "3"
+    doc: chapter3/queryPlantEnergyTotal.html
+    auth: true
+    params:
+      - { name: plantid, type: int, required: true, doc: "Plant id" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryPlantActiveOuputPowerCurrent
+    chapter: "3"
+    doc: chapter3/queryPlantActiveOuputPowerCurrent.html
+    auth: true
+    params:
+      - { name: plantid, type: int, required: true, doc: "Plant id" }
+    returns: "{power: float, unit: string, ts: string}"
+
+  # ---------------------------------------------------------------------
+  # Chapter 4 — collectors
+  # ---------------------------------------------------------------------
+  - action: queryCollectors
+    chapter: "4"
+    doc: chapter4/queryCollectors.html
+    auth: true
+    params:
+      - { name: page, type: int, required: false, doc: "Page index from 0" }
+      - { name: pagesize, type: int, required: false, doc: "1-50; default 1" }
+    returns: "{total, page, pagesize, collector: [...]}"
+
+  - action: queryCollectorInfo
+    chapter: "4"
+    doc: chapter4/queryCollectorInfo.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+    returns: "{pn, type, alias, plantid, ...}"
+
+  - action: queryCollectorStatus
+    chapter: "4"
+    doc: chapter4/queryCollectorStatus.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+    returns: "{status: int, ts: string}"
+
+  - action: queryCollectorDevices
+    chapter: "4"
+    doc: chapter4/queryCollectorDevices.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+    returns: "{device: [...]}"
+
+  # ---------------------------------------------------------------------
+  # Chapter 5 — devices
+  # ---------------------------------------------------------------------
+  - action: queryDevices
+    chapter: "5"
+    doc: chapter5/queryDevices.html
+    auth: true
+    params:
+      - { name: page, type: int, required: false, doc: "Page index from 0" }
+      - { name: pagesize, type: int, required: false, doc: "1-50; default 1" }
+    returns: "{total, page, pagesize, device: [...]}"
+
+  - action: webQueryDeviceEs
+    chapter: "5"
+    doc: "" # vendor docs do not list this; observed in the WatchPower app
+    auth: true
+    params: []
+    returns: "{device: [{devalias, sn, pn, devaddr, devcode}]}"
+
+  - action: queryDeviceCount
+    chapter: "5"
+    doc: chapter5/queryDeviceCount.html
+    auth: true
+    params: []
+    returns: "{count: int}"
+
+  - action: queryDeviceInfo
+    chapter: "5"
+    doc: chapter5/queryDeviceInfo.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{pn, devcode, devaddr, sn, alias, model, ...}"
+
+  - action: queryDeviceLastData
+    chapter: "5"
+    doc: chapter5/queryDeviceLastData.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "[{title, val, unit?}, ...]"
+
+  - action: querySPDeviceLastData
+    chapter: "5"
+    doc: "" # not in vendor docs; observed in WatchPower app, structured pars
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{gts, pars: {gd_, sy_, pv_, bt_}}"
+
+  - action: queryDeviceDataOneDay
+    chapter: "5"
+    doc: chapter5/queryDeviceDataOneDay.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+      - { name: date, type: string, required: true, doc: "yyyy-mm-dd" }
+    returns: "{title: [...], row: [...]}"
+
+  - action: queryDeviceStatus
+    chapter: "5"
+    doc: chapter5/queryDeviceStatus.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{status: int, ts: string}"
+
+  - action: queryDeviceWarning
+    chapter: "5"
+    doc: chapter5/queryDeviceWarning.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{warning: [...]}"
+
+  - action: ctrlDevice
+    chapter: "5"
+    doc: chapter5/ctrlDevice.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+      - { name: id, type: string, required: true, doc: "Control field id" }
+      - { name: val, type: string, required: true, doc: "Value to set" }
+    returns: "(empty on success)"
+
+  # ---------------------------------------------------------------------
+  # Chapter 6 — inverter / generation
+  # ---------------------------------------------------------------------
+  - action: queryDeviceEnergyDay
+    chapter: "6"
+    doc: chapter6/queryDeviceEnergyDay.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+      - { name: date, type: string, required: true, doc: "yyyy-mm-dd" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryDeviceEnergyMonth
+    chapter: "6"
+    doc: chapter6/queryDeviceEnergyMonth.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+      - { name: date, type: string, required: true, doc: "yyyy-mm" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryDeviceEnergyYear
+    chapter: "6"
+    doc: chapter6/queryDeviceEnergyYear.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+      - { name: date, type: string, required: true, doc: "yyyy" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryDeviceEnergyTotal
+    chapter: "6"
+    doc: chapter6/queryDeviceEnergyTotal.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{energy: float, unit: string}"
+
+  - action: queryDeviceActiveOuputPowerCurrent
+    chapter: "6"
+    doc: chapter6/queryDeviceActiveOuputPowerCurrent.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{power: float, unit: string, ts: string}"
+
+  # ---------------------------------------------------------------------
+  # Chapter 11 — cameras
+  # ---------------------------------------------------------------------
+  - action: queryCameraInfo
+    chapter: "11"
+    doc: chapter11/queryCameraInfo.html
+    auth: true
+    params:
+      - { name: cameraid, type: int, required: true, doc: "Camera id" }
+    returns: "{cameraid, plantid, name, vendor, ...}"
+
+  # ---------------------------------------------------------------------
+  # Chapter 84 — file upload
+  # ---------------------------------------------------------------------
+  - action: uploadImg
+    chapter: "84"
+    doc: chapter84/uploadImg.html
+    auth: true
+    params:
+      - {
+          name: fmt,
+          type: string,
+          required: true,
+          doc: "Image format (jpg/png)",
+        }
+    method: POST
+    body: "binary image bytes"
+    returns: "{url: string}"

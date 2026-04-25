@@ -298,17 +298,34 @@ impl ShineMonitorLastData {
         let dat_field = &json["dat"];
         let pars_field = &dat_field["pars"];
         ShineMonitorLastData {
-            timestamp: NaiveDateTime::parse_from_str(
-                &dat_field["gts"].as_str().unwrap(),
-                "%Y-%m-%d %H:%M:%S",
-            )
-            .unwrap(),
+            timestamp: parse_gts(&dat_field["gts"]),
             grid: ShineMonitorLastDataGrid::from_json(&pars_field["gd_"]),
             system: ShineMonitorLastDataSystem::from_json(&pars_field["sy_"]),
             pv: ShineMonitorLastDataPV::from_json(&pars_field["pv_"]),
             main: ShineMonitorLastDataMain::from_json(&pars_field["bt_"]),
         }
     }
+}
+
+/// Parse `gts` which the vendor returns either as
+/// "yyyy-mm-dd HH:MM:SS" or as a milliseconds-since-epoch string.
+fn parse_gts(value: &serde_json::Value) -> NaiveDateTime {
+    if let Some(raw) = value.as_str() {
+        let trimmed = raw.trim();
+        if let Ok(ms) = trimmed.parse::<i64>() {
+            return chrono::DateTime::from_timestamp_millis(ms)
+                .expect("valid epoch ms")
+                .naive_utc();
+        }
+        return NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S")
+            .expect("valid gts string");
+    }
+    if let Some(ms) = value.as_i64() {
+        return chrono::DateTime::from_timestamp_millis(ms)
+            .expect("valid epoch ms")
+            .naive_utc();
+    }
+    panic!("unexpected gts value: {value:?}");
 }
 
 #[derive(Debug, Clone)]
