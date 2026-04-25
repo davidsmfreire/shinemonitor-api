@@ -1,8 +1,12 @@
 # shinemonitor-mock
 
 In-process and subprocess-friendly mock of the ShineMonitor REST API.
-Used by both the Python and Rust client test suites; usable as-is from
+Used by the Python, Rust, and Go client test suites; usable as-is from
 any language that can spawn a subprocess and parse one line of stdout.
+
+Action handlers are generated from `spec/endpoints.yaml` by
+`scripts/codegen.py` — adding a new endpoint to the spec gives every
+client a canned response without touching the mock by hand.
 
 ## Usage
 
