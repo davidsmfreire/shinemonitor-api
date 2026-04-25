@@ -1,6 +1,6 @@
 [package]
 name = "shinemonitor-api"
-version = "0.6.2"
+version = "0.6.3"
 authors = ["David Freire"]
 edition = "2021"
 description = "ShineMonitor RestAPI client (WatchPower, SolarPower, etc.)"
