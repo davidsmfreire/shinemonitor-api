@@ -24,8 +24,15 @@ dev = [
 test = [
     "pytest>=8,<9",
     "pytest-asyncio>=0.23,<1",
-    "respx>=0.21,<1",
+    "shinemonitor-mock",
 ]
+
+[tool.uv.sources]
+shinemonitor-mock = { path = "../mock-server", editable = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
 
 [build-system]
 requires = ["hatchling"]

@@ -11,6 +11,7 @@ vendor apps for Voltronic-derived inverters.
 | `spec/`              | API schemas — source of truth for both clients |
 | `python/`            | Python client (`shinemonitor-api` on PyPI)     |
 | `rust/`              | Rust client (`shinemonitor-api` on crates.io)  |
+| `mock-server/`       | Cross-language mock for testing                |
 | `custom_components/` | Home Assistant integration (HACS-installable)  |
 
 Both clients release in lockstep from a single `vX.Y.Z` git tag.

@@ -24,10 +24,18 @@ class ShineMonitorAPI:
         *,
         client: httpx.Client | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
+        base_url: str | None = None,
+        suffix_context: str | None = None,
+        company_key: str | None = None,
     ) -> None:
         self._http = client or httpx.Client(timeout=timeout)
         self._owns_http = client is None
         self._auth: _p.AuthState | None = None
+        self._config = _p.ProtocolConfig(
+            base_url=base_url or _p.DEFAULT_BASE_URL,
+            suffix_context=suffix_context or _p.DEFAULT_SUFFIX_CONTEXT,
+            company_key=company_key or _p.DEFAULT_COMPANY_KEY,
+        )
 
     def __enter__(self) -> ShineMonitorAPI:
         return self
@@ -49,17 +57,19 @@ class ShineMonitorAPI:
         return self._auth
 
     def login(self, username: str, password: str) -> ShineMonitorAPI:
-        payload = self._get_json(_p.login_url(username, password))
+        payload = self._get_json(_p.login_url(self._config, username, password))
         self._auth = _p.parse_login(payload)
         _LOGGER.debug("ShineMonitor login successful")
         return self
 
     def get_devices(self) -> list[DeviceIdentifier]:
-        return _p.parse_devices(self._get_json(_p.devices_url(self._require_auth())))
+        return _p.parse_devices(
+            self._get_json(_p.devices_url(self._config, self._require_auth()))
+        )
 
     def get_last_data(self, device: DeviceIdentifier) -> LastData:
         return _p.parse_last(
-            self._get_json(_p.last_data_url(self._require_auth(), device))
+            self._get_json(_p.last_data_url(self._config, self._require_auth(), device))
         )
 
     def get_daily_data(
@@ -73,6 +83,7 @@ class ShineMonitorAPI:
         return _p.parse_daily_data(
             self._get_json(
                 _p.daily_data_url(
+                    self._config,
                     self._require_auth(),
                     day,
                     serial_number,
@@ -96,7 +107,9 @@ class ShineMonitorAPI:
 
     def _require_auth(self) -> _p.AuthState:
         if self._auth is None:
-            raise _p.ShineMonitorAuthError("Not logged in — call .login() first")
+            raise _p.ShineMonitorAuthError(
+                {"err": -1, "desc": "Not logged in — call .login() first"}
+            )
         return self._auth
 
     def _get_json(self, url: str) -> dict[str, Any]:

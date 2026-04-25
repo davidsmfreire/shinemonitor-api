@@ -337,6 +337,21 @@ impl ShineMonitorAPI {
         }
     }
 
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self._base_url = base_url.into();
+        self
+    }
+
+    pub fn with_suffix_context(mut self, suffix: impl Into<String>) -> Self {
+        self._suffix_context = suffix.into();
+        self
+    }
+
+    pub fn with_company_key(mut self, key: impl Into<String>) -> Self {
+        self._company_key = key.into();
+        self
+    }
+
     fn generate_salt() -> String {
         let start = SystemTime::now();
         let since_the_epoch = start
@@ -428,16 +443,13 @@ impl ShineMonitorAPI {
         }
     }
 
-    fn get_daily_data(
+    pub fn get_daily_data(
         &self,
         day: NaiveDate,
-    ) -> Result<ShineMonitorDailyData, Box<dyn std::error::Error>> {
+    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         let _date = day.format("%Y-%m-%d").to_string();
         let query = format!("&date={}", _date);
-        match self._request("queryDeviceDataOneDay", Some(&query)) {
-            Ok(raw) => Ok(ShineMonitorDailyData::from_json(&raw)),
-            Err(e) => Err(e),
-        }
+        self._request("queryDeviceDataOneDay", Some(&query))
     }
 
     fn get_power_flow(&self) -> Result<ShineMonitorFlowData, Box<dyn std::error::Error>> {

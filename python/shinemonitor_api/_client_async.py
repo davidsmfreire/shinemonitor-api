@@ -24,10 +24,18 @@ class AsyncShineMonitorAPI:
         *,
         client: httpx.AsyncClient | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
+        base_url: str | None = None,
+        suffix_context: str | None = None,
+        company_key: str | None = None,
     ) -> None:
         self._http = client or httpx.AsyncClient(timeout=timeout)
         self._owns_http = client is None
         self._auth: _p.AuthState | None = None
+        self._config = _p.ProtocolConfig(
+            base_url=base_url or _p.DEFAULT_BASE_URL,
+            suffix_context=suffix_context or _p.DEFAULT_SUFFIX_CONTEXT,
+            company_key=company_key or _p.DEFAULT_COMPANY_KEY,
+        )
 
     async def __aenter__(self) -> AsyncShineMonitorAPI:
         return self
@@ -49,17 +57,21 @@ class AsyncShineMonitorAPI:
         return self._auth
 
     async def login(self, username: str, password: str) -> AsyncShineMonitorAPI:
-        payload = await self._get_json(_p.login_url(username, password))
+        payload = await self._get_json(_p.login_url(self._config, username, password))
         self._auth = _p.parse_login(payload)
         _LOGGER.debug("ShineMonitor login successful")
         return self
 
     async def get_devices(self) -> list[DeviceIdentifier]:
-        payload = await self._get_json(_p.devices_url(self._require_auth()))
+        payload = await self._get_json(
+            _p.devices_url(self._config, self._require_auth())
+        )
         return _p.parse_devices(payload)
 
     async def get_last_data(self, device: DeviceIdentifier) -> LastData:
-        payload = await self._get_json(_p.last_data_url(self._require_auth(), device))
+        payload = await self._get_json(
+            _p.last_data_url(self._config, self._require_auth(), device)
+        )
         return _p.parse_last(payload)
 
     async def get_daily_data(
@@ -72,6 +84,7 @@ class AsyncShineMonitorAPI:
     ) -> dict[str, Any]:
         payload = await self._get_json(
             _p.daily_data_url(
+                self._config,
                 self._require_auth(),
                 day,
                 serial_number,
@@ -95,7 +108,9 @@ class AsyncShineMonitorAPI:
 
     def _require_auth(self) -> _p.AuthState:
         if self._auth is None:
-            raise _p.ShineMonitorAuthError("Not logged in — call .login() first")
+            raise _p.ShineMonitorAuthError(
+                {"err": -1, "desc": "Not logged in — call .login() first"}
+            )
         return self._auth
 
     async def _get_json(self, url: str) -> dict[str, Any]:

@@ -21,11 +21,13 @@ jobs:
           filters: |
             python:
               - 'python/**'
+              - 'mock-server/**'
               - 'spec/**'
               - '.github/workflows/release.yml'
               - '.pre-commit-config.yaml'
             rust:
               - 'rust/**'
+              - 'mock-server/**'
               - 'spec/**'
               - '.github/workflows/release.yml'
             spec:
@@ -67,15 +69,13 @@ jobs:
           enable-cache: true
       - run: uv sync --all-groups
       - run: uv run mypy shinemonitor_api
+      - run: uv run pytest tests/
       - run: uv build
 
   rust:
     needs: [detect-changes, lint]
     if: needs.detect-changes.outputs.rust == 'true'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: rust
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -84,10 +84,19 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
-      - run: cargo fmt --check
-      - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo build --release
-      - run: cargo test
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install python deps for mock server
+        working-directory: python
+        run: uv sync --all-groups
+      - name: Build and test
+        working-directory: rust
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo build --release
+          cargo test
 
   release-python:
     needs: [python, rust]

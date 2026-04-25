@@ -5,5 +5,8 @@ dev-setup:
 build:
 	uv build
 
+test:
+	uv run pytest tests/
+
 lock:
 	uv lock
