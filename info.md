@@ -1,5 +1,7 @@
 # ShineMonitor
 
+<img src="https://raw.githubusercontent.com/davidsmfreire/shinemonitor-api/main/shinemonitor.png" alt="ShineMonitor" width="120" align="right" />
+
 Home Assistant integration for inverters that report to
 `api.shinemonitor.com` (WatchPower, SolarPower, and similar vendor
 apps).
