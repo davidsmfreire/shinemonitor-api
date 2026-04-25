@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from tqdm import tqdm
 from dotenv import load_dotenv
-from watchpower_api import WatchPowerAPI
+from shinemonitor_api import ShineMonitorAPI
 
 load_dotenv()
 START = "2024-06-01"
@@ -27,7 +27,7 @@ def normalize_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    api = WatchPowerAPI()
+    api = ShineMonitorAPI()
     api.login(USERNAME, PASSWORD)
 
     os.makedirs("outputs", exist_ok=True)

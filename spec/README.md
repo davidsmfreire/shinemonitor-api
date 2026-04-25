@@ -1,7 +1,8 @@
 # spec
 
-Source of truth for the WatchPower / ShineMonitor API surface. Both
-`python/` and `rust/` clients are built against this directory.
+Source of truth for the ShineMonitor API surface (used by WatchPower,
+SolarPower, and other vendor apps). Both `python/` and `rust/` clients
+are built against this directory.
 
 ## Upstream
 

@@ -1,16 +1,34 @@
-# WatchPower API in Python
+# ShineMonitor API in Python
 
-By using Jadx and decompiling the WatchPower Android APK, I reverse-engineered its authentication process to have direct access to the backend's Rest-API. This way, we can programmatically query inverter data. I've made this available through a Python package in pip:
+ShineMonitor is the cloud backend (`api.shinemonitor.com`) used by several
+inverter vendor apps — WatchPower, SolarPower, etc. By decompiling the
+WatchPower Android APK with Jadx, the authentication flow was
+reverse-engineered, giving direct access to the backend REST API for
+programmatic inverter queries.
 
 ```shell
-pip install watchpower-api
+pip install shinemonitor-api
 ```
 
-Check the examples folder for how to use the library.
-To run examples or develop for this library its best to use [Poetry](https://python-poetry.org/). Clone the project and run:
+Check the `examples/` folder for usage. To run the examples or develop
+the library, use [uv](https://docs.astral.sh/uv/):
 
-```
-poetry install
+```shell
+uv sync --all-groups
 ```
 
-It should install all necessary dependencies.
+That installs all dependencies, including the optional `examples` group.
+
+## Migrating from `watchpower-api`
+
+`watchpower-api` is the previous PyPI name. The package was renamed to
+`shinemonitor-api` because the upstream API serves more than just the
+WatchPower app. The `WatchPowerAPI` class is now `ShineMonitorAPI`.
+
+```python
+# before
+from watchpower_api import WatchPowerAPI
+
+# after
+from shinemonitor_api import ShineMonitorAPI
+```

@@ -4,12 +4,12 @@ from typing import Any, Optional
 import requests
 import hashlib
 
-from watchpower_api.models import DeviceIdentifier
+from shinemonitor_api.models import DeviceIdentifier
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
-class WatchPowerAPI:
+class ShineMonitorAPI:
     _BASE_URL: str = "http://android.shinemonitor.com/public/"
     _SUFFIX_CONTEXT: str = "&i18n=pt_BR&lang=pt_BR&source=1&_app_client_=android&_app_id_=wifiapp.volfw.watchpower&_app_version_=1.0.6.3"
     _COMPANY_KEY: str = "bnrl_frRFjEz8Mkn"
@@ -42,7 +42,7 @@ class WatchPowerAPI:
             )
         return self.token, self.secret
 
-    def login(self, username: str, password: str) -> "WatchPowerAPI":
+    def login(self, username: str, password: str) -> "ShineMonitorAPI":
         """Authenticates against the API and stores relevant auth artifacts for follow-up requests using this instance
 
         Args:

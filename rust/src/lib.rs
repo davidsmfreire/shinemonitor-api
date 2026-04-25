@@ -4,21 +4,21 @@ use serde::Serialize;
 use sha1::{Digest, Sha1};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-type WatchPowerAPIResult = Result<serde_json::Value, Box<dyn std::error::Error>>;
+type ShineMonitorAPIResult = Result<serde_json::Value, Box<dyn std::error::Error>>;
 
 #[derive(Debug, Serialize, Clone)]
-struct WatchPowerDailyData {
+struct ShineMonitorDailyData {
     // TODO
 }
 
-impl WatchPowerDailyData {
+impl ShineMonitorDailyData {
     fn from_json(json: &serde_json::Value) -> Self {
         todo!()
     }
 }
 
 #[derive(Debug, Serialize, Clone)]
-struct WatchPowerDeviceParams {
+struct ShineMonitorDeviceParams {
     serial_number: String,
     wifi_pn: String,
     dev_code: i32,
@@ -26,7 +26,7 @@ struct WatchPowerDeviceParams {
 }
 
 #[derive(Debug, Serialize, Clone)]
-struct WatchPowerFlowData {
+struct ShineMonitorFlowData {
     grid_voltage: f32,
     grid_frequency: f32,
     ac_output_voltage: f32,
@@ -38,14 +38,14 @@ struct WatchPowerFlowData {
     pv_input_power: f32,
 }
 
-impl WatchPowerFlowData {
+impl ShineMonitorFlowData {
     fn from_json(json: &serde_json::Value) -> Self {
         todo!()
     }
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct WatchPowerLastDataGrid {
+pub struct ShineMonitorLastDataGrid {
     pub grid_rating_voltage: f32,
     pub grid_rating_current: f32,
     pub battery_rating_voltage: f32,
@@ -56,7 +56,7 @@ pub struct WatchPowerLastDataGrid {
     pub ac_output_rating_active_power: i32,
 }
 
-impl WatchPowerLastDataGrid {
+impl ShineMonitorLastDataGrid {
     fn from_json(json: &serde_json::Value) -> Self {
         let mut grid_rating_voltage = None;
         let mut grid_rating_current = None;
@@ -104,7 +104,7 @@ impl WatchPowerLastDataGrid {
                 _ => continue,
             }
         }
-        WatchPowerLastDataGrid {
+        ShineMonitorLastDataGrid {
             grid_rating_voltage: grid_rating_voltage.expect("Grid rating voltage not found"),
             grid_rating_current: grid_rating_current.expect("Grid rating current not found"),
             battery_rating_voltage: battery_rating_voltage
@@ -124,13 +124,13 @@ impl WatchPowerLastDataGrid {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct WatchPowerLastDataSystem {
+pub struct ShineMonitorLastDataSystem {
     pub model: String,
     pub main_cpu_firmware_version: String,
     pub secondary_cpu_firmware_version: String,
 }
 
-impl WatchPowerLastDataSystem {
+impl ShineMonitorLastDataSystem {
     fn from_json(json: &serde_json::Value) -> Self {
         let mut model = None;
         let mut main_cpu_firmware_version = None;
@@ -148,7 +148,7 @@ impl WatchPowerLastDataSystem {
                 _ => continue,
             }
         }
-        WatchPowerLastDataSystem {
+        ShineMonitorLastDataSystem {
             model: model.expect("Model not found"),
             main_cpu_firmware_version: main_cpu_firmware_version
                 .expect("Main CPU firmware version not found"),
@@ -159,11 +159,11 @@ impl WatchPowerLastDataSystem {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct WatchPowerLastDataPV {
+pub struct ShineMonitorLastDataPV {
     pub pv_input_current: f32,
 }
 
-impl WatchPowerLastDataPV {
+impl ShineMonitorLastDataPV {
     fn from_json(json: &serde_json::Value) -> Self {
         let mut pv_input_current = None;
         for field in json.as_array().unwrap() {
@@ -174,14 +174,14 @@ impl WatchPowerLastDataPV {
                 _ => continue,
             }
         }
-        WatchPowerLastDataPV {
+        ShineMonitorLastDataPV {
             pv_input_current: pv_input_current.expect("PV input current not found"),
         }
     }
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct WatchPowerLastDataMain {
+pub struct ShineMonitorLastDataMain {
     pub grid_voltage: f32,
     pub grid_frequency: f32,
     pub pv_input_voltage: f32,
@@ -197,7 +197,7 @@ pub struct WatchPowerLastDataMain {
     pub output_load_percent: i8,
 }
 
-impl WatchPowerLastDataMain {
+impl ShineMonitorLastDataMain {
     fn from_json(json: &serde_json::Value) -> Self {
         let mut grid_voltage = None;
         let mut grid_frequency = None;
@@ -262,7 +262,7 @@ impl WatchPowerLastDataMain {
                 _ => continue,
             }
         }
-        WatchPowerLastDataMain {
+        ShineMonitorLastDataMain {
             grid_voltage: grid_voltage.expect("Grid voltage not found"),
             grid_frequency: grid_frequency.expect("Grid frequency not found"),
             pv_input_voltage: pv_input_voltage.expect("PV input voltage not found"),
@@ -285,34 +285,34 @@ impl WatchPowerLastDataMain {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct WatchPowerLastData {
+pub struct ShineMonitorLastData {
     pub timestamp: NaiveDateTime,
-    pub grid: WatchPowerLastDataGrid,
-    pub system: WatchPowerLastDataSystem,
-    pub pv: WatchPowerLastDataPV,
-    pub main: WatchPowerLastDataMain,
+    pub grid: ShineMonitorLastDataGrid,
+    pub system: ShineMonitorLastDataSystem,
+    pub pv: ShineMonitorLastDataPV,
+    pub main: ShineMonitorLastDataMain,
 }
 
-impl WatchPowerLastData {
+impl ShineMonitorLastData {
     fn from_json(json: &serde_json::Value) -> Self {
         let dat_field = &json["dat"];
         let pars_field = &dat_field["pars"];
-        WatchPowerLastData {
+        ShineMonitorLastData {
             timestamp: NaiveDateTime::parse_from_str(
                 &dat_field["gts"].as_str().unwrap(),
                 "%Y-%m-%d %H:%M:%S",
             )
             .unwrap(),
-            grid: WatchPowerLastDataGrid::from_json(&pars_field["gd_"]),
-            system: WatchPowerLastDataSystem::from_json(&pars_field["sy_"]),
-            pv: WatchPowerLastDataPV::from_json(&pars_field["pv_"]),
-            main: WatchPowerLastDataMain::from_json(&pars_field["bt_"]),
+            grid: ShineMonitorLastDataGrid::from_json(&pars_field["gd_"]),
+            system: ShineMonitorLastDataSystem::from_json(&pars_field["sy_"]),
+            pv: ShineMonitorLastDataPV::from_json(&pars_field["pv_"]),
+            main: ShineMonitorLastDataMain::from_json(&pars_field["bt_"]),
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct WatchPowerAPI {
+pub struct ShineMonitorAPI {
     _base_url: String,
     _suffix_context: String,
     _company_key: String,
@@ -320,12 +320,12 @@ pub struct WatchPowerAPI {
     _secret: String,
     _expire: Option<u64>,
     _client: Client,
-    _device_params: WatchPowerDeviceParams,
+    _device_params: ShineMonitorDeviceParams,
 }
 
-impl WatchPowerAPI {
+impl ShineMonitorAPI {
     pub fn new(serial_number: &str, wifi_pn: &str, dev_code: i32, dev_addr: i32) -> Self {
-        WatchPowerAPI {
+        ShineMonitorAPI {
             _base_url: "http://android.shinemonitor.com/public/".to_string(),
             _suffix_context: "&i18n=pt_BR&lang=pt_BR&source=1&_app_client_=android&_app_id_=wifiapp.volfw.watchpower&_app_version_=1.0.6.3".to_string(),
             _company_key: "bnrl_frRFjEz8Mkn".to_string(),
@@ -333,7 +333,7 @@ impl WatchPowerAPI {
             _secret: "ems_secret".to_string(),
             _expire: None,
             _client: Client::new(),
-            _device_params: WatchPowerDeviceParams{serial_number: serial_number.to_string(), wifi_pn: wifi_pn.to_string(), dev_code: dev_code, dev_addr: dev_addr},
+            _device_params: ShineMonitorDeviceParams{serial_number: serial_number.to_string(), wifi_pn: wifi_pn.to_string(), dev_code: dev_code, dev_addr: dev_addr},
         }
     }
 
@@ -353,7 +353,7 @@ impl WatchPowerAPI {
 
     fn hash(&self, args: Vec<&str>) -> String {
         let arg_concat = args.join("");
-        WatchPowerAPI::sha1_str_lower_case(arg_concat.as_bytes())
+        ShineMonitorAPI::sha1_str_lower_case(arg_concat.as_bytes())
     }
 
     pub fn login(
@@ -366,7 +366,7 @@ impl WatchPowerAPI {
             username, self._company_key, self._suffix_context
         );
 
-        let salt = WatchPowerAPI::generate_salt();
+        let salt = ShineMonitorAPI::generate_salt();
         let password_hash = self.hash(vec![password]);
         let sign = self.hash(vec![&salt, &password_hash, &base_action]);
 
@@ -390,7 +390,7 @@ impl WatchPowerAPI {
         }
     }
 
-    fn _request(&self, action: &str, query: Option<&str>) -> WatchPowerAPIResult {
+    fn _request(&self, action: &str, query: Option<&str>) -> ShineMonitorAPIResult {
         let base_action = format!(
             "&action={}&pn={}&devcode={}&sn={}&devaddr={}{}{}",
             action,
@@ -401,7 +401,7 @@ impl WatchPowerAPI {
             query.unwrap_or(""),
             self._suffix_context
         );
-        let salt = WatchPowerAPI::generate_salt();
+        let salt = ShineMonitorAPI::generate_salt();
         let sign = self.hash(vec![
             &salt,
             &self._secret,
@@ -431,25 +431,25 @@ impl WatchPowerAPI {
     fn get_daily_data(
         &self,
         day: NaiveDate,
-    ) -> Result<WatchPowerDailyData, Box<dyn std::error::Error>> {
+    ) -> Result<ShineMonitorDailyData, Box<dyn std::error::Error>> {
         let _date = day.format("%Y-%m-%d").to_string();
         let query = format!("&date={}", _date);
         match self._request("queryDeviceDataOneDay", Some(&query)) {
-            Ok(raw) => Ok(WatchPowerDailyData::from_json(&raw)),
+            Ok(raw) => Ok(ShineMonitorDailyData::from_json(&raw)),
             Err(e) => Err(e),
         }
     }
 
-    fn get_power_flow(&self) -> Result<WatchPowerFlowData, Box<dyn std::error::Error>> {
+    fn get_power_flow(&self) -> Result<ShineMonitorFlowData, Box<dyn std::error::Error>> {
         match self._request("queryDeviceFlowPower", None) {
-            Ok(raw) => Ok(WatchPowerFlowData::from_json(&raw)),
+            Ok(raw) => Ok(ShineMonitorFlowData::from_json(&raw)),
             Err(e) => Err(e),
         }
     }
 
-    pub fn get_last_data(&self) -> Result<WatchPowerLastData, Box<dyn std::error::Error>> {
+    pub fn get_last_data(&self) -> Result<ShineMonitorLastData, Box<dyn std::error::Error>> {
         match self._request("querySPDeviceLastData", None) {
-            Ok(raw) => Ok(WatchPowerLastData::from_json(&raw)),
+            Ok(raw) => Ok(ShineMonitorLastData::from_json(&raw)),
             Err(e) => Err(e),
         }
     }

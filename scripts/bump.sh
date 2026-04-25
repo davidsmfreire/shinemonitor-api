@@ -15,7 +15,7 @@ sed -i "s/^version = .*/version = \"$VERSION\"/" "$ROOT/python/pyproject.toml"
 sed -i "s/^version = .*/version = \"$VERSION\"/" "$ROOT/rust/Cargo.toml"
 
 (cd "$ROOT/python" && uv lock)
-(cd "$ROOT/rust" && cargo update -p watchpower-api --precise "$VERSION" 2>/dev/null || cargo generate-lockfile)
+(cd "$ROOT/rust" && cargo update -p shinemonitor-api --precise "$VERSION" 2>/dev/null || cargo generate-lockfile)
 
 git -C "$ROOT" add python/pyproject.toml python/uv.lock rust/Cargo.toml rust/Cargo.lock
 git -C "$ROOT" commit -m "release: v$VERSION"

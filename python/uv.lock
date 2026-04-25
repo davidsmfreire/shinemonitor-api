@@ -1431,6 +1431,53 @@ wheels = [
 ]
 
 [[package]]
+name = "shinemonitor-api"
+version = "0.4.0"
+source = { editable = "." }
+dependencies = [
+    { name = "pydantic" },
+    { name = "requests", version = "2.32.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "requests", version = "2.33.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy", version = "1.19.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "mypy", version = "1.20.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "pre-commit" },
+    { name = "python-semantic-release" },
+]
+examples = [
+    { name = "pandas" },
+    { name = "python-dotenv", version = "1.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "python-dotenv", version = "1.2.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "tqdm" },
+]
+types = [
+    { name = "types-requests", version = "2.32.4.20260107", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "types-requests", version = "2.33.0.20260408", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=1.0.0,<3.0.0" },
+    { name = "requests", specifier = ">=2.25.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.14.1,<2.0.0" },
+    { name = "pre-commit", specifier = "==4.0.0" },
+    { name = "python-semantic-release", specifier = ">=9.15.2,<10.0.0" },
+]
+examples = [
+    { name = "pandas", specifier = "==1.5.3" },
+    { name = "python-dotenv", specifier = ">=1.0.1,<2.0.0" },
+    { name = "tqdm", specifier = ">=4.67.1,<5.0.0" },
+]
+types = [{ name = "types-requests", specifier = ">=2.32.0.20241016,<3.0.0" }]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1602,53 +1649,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/0c/98/3a7e644e19cb26133
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/8d/edd0bd910ff803c308ee9a6b7778621af0d10252219ad9f19ef4d4982a61/virtualenv-21.2.4-py3-none-any.whl", hash = "sha256:29d21e941795206138d0f22f4e45ff7050e5da6c6472299fb7103318763861ac", size = 5831232, upload-time = "2026-04-14T22:15:29.342Z" },
 ]
-
-[[package]]
-name = "watchpower-api"
-version = "0.3.0"
-source = { editable = "." }
-dependencies = [
-    { name = "pydantic" },
-    { name = "requests", version = "2.32.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "requests", version = "2.33.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "mypy", version = "1.19.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "mypy", version = "1.20.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "pre-commit" },
-    { name = "python-semantic-release" },
-]
-examples = [
-    { name = "pandas" },
-    { name = "python-dotenv", version = "1.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "python-dotenv", version = "1.2.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "tqdm" },
-]
-types = [
-    { name = "types-requests", version = "2.32.4.20260107", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "types-requests", version = "2.33.0.20260408", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pydantic", specifier = ">=1.0.0,<3.0.0" },
-    { name = "requests", specifier = ">=2.25.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=1.14.1,<2.0.0" },
-    { name = "pre-commit", specifier = "==4.0.0" },
-    { name = "python-semantic-release", specifier = ">=9.15.2,<10.0.0" },
-]
-examples = [
-    { name = "pandas", specifier = "==1.5.3" },
-    { name = "python-dotenv", specifier = ">=1.0.1,<2.0.0" },
-    { name = "tqdm", specifier = ">=4.67.1,<5.0.0" },
-]
-types = [{ name = "types-requests", specifier = ">=2.32.0.20241016,<3.0.0" }]
 
 [[package]]
 name = "wrapt"

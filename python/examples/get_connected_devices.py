@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from watchpower_api import WatchPowerAPI
+from shinemonitor_api import ShineMonitorAPI
 
 load_dotenv()
 USERNAME = os.environ["USERNAME"]
@@ -9,7 +9,7 @@ PASSWORD = os.environ["PASSWORD"]
 
 
 def main():
-    api = WatchPowerAPI()
+    api = ShineMonitorAPI()
     api.login(USERNAME, PASSWORD)
     devices = api.get_devices()
 
