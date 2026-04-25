@@ -67,7 +67,7 @@ jobs:
       - uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-      - run: uv sync --all-groups
+      - run: uv sync --group test --group dev
       - run: uv run mypy shinemonitor_api
       - run: uv run pytest tests/
       - run: uv build
@@ -89,7 +89,7 @@ jobs:
           enable-cache: true
       - name: Install python deps for mock server
         working-directory: python
-        run: uv sync --all-groups
+        run: uv sync --group test
       - name: Build and test
         working-directory: rust
         run: |
