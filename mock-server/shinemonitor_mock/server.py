@@ -32,10 +32,10 @@ from fastapi import FastAPI, Request
 # --- Canonical fixture data ------------------------------------------------
 
 VALID_USERNAME = "demo-user"
-VALID_PASSWORD = "demo-pass"
+VALID_PASSWORD = "demo-pass"  # nosec B105 - fixture, not a real credential
 VALID_COMPANY_KEY = "test-company"
-ISSUED_TOKEN = "tok-12345"
-ISSUED_SECRET = "sec-67890"
+ISSUED_TOKEN = "tok-12345"  # nosec B105 - fixture, not a real credential
+ISSUED_SECRET = "sec-67890"  # nosec B105 - fixture, not a real credential
 TOKEN_EXPIRES = 604800
 
 DEVICES: list[dict[str, Any]] = [
