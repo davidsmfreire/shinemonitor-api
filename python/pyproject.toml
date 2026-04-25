@@ -1,6 +1,6 @@
 [project]
 name = "shinemonitor-api"
-version = "0.6.0"
+version = "0.6.1"
 description = "ShineMonitor Rest-API client in Python (WatchPower, SolarPower, etc.)"
 authors = [{ name = "David Freire", email = "davidsmfreire@gmail.com" }]
 readme = "README.md"
