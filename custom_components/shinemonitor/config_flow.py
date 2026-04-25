@@ -7,10 +7,12 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from shinemonitor_api import ShineMonitorAPI
+from shinemonitor_api import ShineMonitorAuthError
+from shinemonitor_api.aio import AsyncShineMonitorAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -24,15 +26,14 @@ _USER_SCHEMA = vol.Schema(
 )
 
 
-def _validate_credentials(username: str, password: str) -> None:
-    """Synchronous credential check — must be called via executor."""
-    ShineMonitorAPI().login(username, password)
-
-
 class ShineMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ShineMonitor."""
 
     VERSION = 1
+
+    async def _validate(self, username: str, password: str) -> None:
+        api = AsyncShineMonitorAPI(client=get_async_client(self.hass))
+        await api.login(username, password)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -43,10 +44,8 @@ class ShineMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
             try:
-                await self.hass.async_add_executor_job(
-                    _validate_credentials, username, user_input[CONF_PASSWORD]
-                )
-            except RuntimeError as err:
+                await self._validate(username, user_input[CONF_PASSWORD])
+            except ShineMonitorAuthError as err:
                 _LOGGER.warning("ShineMonitor login failed: %s", err)
                 errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
@@ -71,12 +70,10 @@ class ShineMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reauth_entry()
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(
-                    _validate_credentials,
-                    entry.data[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
+                await self._validate(
+                    entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
-            except RuntimeError:
+            except ShineMonitorAuthError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(

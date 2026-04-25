@@ -27,23 +27,23 @@ def normalize_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    api = ShineMonitorAPI()
-    api.login(USERNAME, PASSWORD)
+    with ShineMonitorAPI() as api:
+        api.login(USERNAME, PASSWORD)
 
-    os.makedirs("outputs", exist_ok=True)
-    all_data = []
-    date_range = pd.date_range(START, END, freq="D")
-    for _date in tqdm(date_range, total=len(date_range)):
-        try:
-            raw_data = api.get_daily_data(
-                _date.date(), SERIAL_NUMBER, WIFI_PN, DEV_CODE, DEV_ADDR
-            )
-            data = normalize_data(raw_data)
-            data.to_csv(f"outputs/daily_data_{_date.date().isoformat()}.csv")
-            all_data.append(data)
-        except Exception as e:
-            print(f"Failed to get date {_date.date()}: {e}")
-            continue
+        os.makedirs("outputs", exist_ok=True)
+        all_data = []
+        date_range = pd.date_range(START, END, freq="D")
+        for _date in tqdm(date_range, total=len(date_range)):
+            try:
+                raw_data = api.get_daily_data(
+                    _date.date(), SERIAL_NUMBER, WIFI_PN, DEV_CODE, DEV_ADDR
+                )
+                data = normalize_data(raw_data)
+                data.to_csv(f"outputs/daily_data_{_date.date().isoformat()}.csv")
+                all_data.append(data)
+            except Exception as e:
+                print(f"Failed to get date {_date.date()}: {e}")
+                continue
 
     all_data = pd.concat(all_data)
     all_data.to_csv("outputs/all_daily_data.csv")
