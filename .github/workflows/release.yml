@@ -1,54 +1,134 @@
-name: CI
+name: CI / Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    tags: ["v*"]
   pull_request:
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      rust: ${{ steps.filter.outputs.rust }}
+      spec: ${{ steps.filter.outputs.spec }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - 'python/**'
+              - 'spec/**'
+              - '.github/workflows/release.yml'
+              - '.pre-commit-config.yaml'
+            rust:
+              - 'rust/**'
+              - 'spec/**'
+              - '.github/workflows/release.yml'
+            spec:
+              - 'spec/**'
+
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: astral-sh/setup-uv@v3
+      - name: Install uv (for local pre-commit hook)
+        run: uv --version
       - uses: pre-commit/action@v3.0.1
 
-  # Make sure commit messages follow the conventional commits convention:
-  # https://www.conventionalcommits.org
   commitlint:
     name: Lint Commit Messages
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v4.1.11
+      - uses: wagoid/commitlint-github-action@v6
 
-  release:
+  python:
+    needs: [detect-changes, lint]
+    if: needs.detect-changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv sync --all-groups
+      - run: uv run mypy watchpower_api
+      - run: uv build
+
+  rust:
+    needs: [detect-changes, lint]
+    if: needs.detect-changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo build --release
+      - run: cargo test
+
+  release-python:
+    needs: [python, rust]
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: release
-    if: github.ref == 'refs/heads/main'
-    needs:
-      - lint
-      - commitlint
-      # - test # TODO
-
+    defaults:
+      run:
+        working-directory: python
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: astral-sh/setup-uv@v3
+      - run: uv build
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish
 
-      # Run semantic release:
-      # - Update CHANGELOG.md
-      # - Update version in code
-      # - Create git tag
-      # - Create GitHub release
-      # - Publish to PyPI
-      - name: Python Semantic Release
-        uses: python-semantic-release/python-semantic-release@v9.15.2
+  release-rust:
+    needs: [python, rust]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: release
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo publish --token ${{ secrets.CARGO_TOKEN }}
+
+  github-release:
+    needs: [release-python, release-rust]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: softprops/action-gh-release@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
+          generate_release_notes: true
