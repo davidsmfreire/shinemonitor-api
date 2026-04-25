@@ -44,15 +44,14 @@ repos:
     hooks:
       - id: bandit
         args: [-x, tests]
-  - repo: https://github.com/python-poetry/poetry
-    rev: 1.8.0
+  - repo: local
     hooks:
-      - id: poetry-check
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
-    hooks:
-      - id: prettier
-        args: ["--tab-width", "2"]
+      - id: uv-lock
+        name: uv-lock (python/)
+        language: system
+        entry: bash -c 'cd python && uv lock --check'
+        files: ^python/(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.3
     hooks:
