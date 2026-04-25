@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import date
 from types import TracebackType
@@ -38,8 +39,8 @@ class AsyncShineMonitorAPI(AsyncActionsMixin):
         self._auth: _p.AuthState | None = None
         self._config = _p.ProtocolConfig(
             base_url=base_url or _p.DEFAULT_BASE_URL,
-            suffix_context=suffix_context or _p.DEFAULT_SUFFIX_CONTEXT,
-            company_key=company_key or _p.DEFAULT_COMPANY_KEY,
+            suffix_context=suffix_context or _p.WATCHPOWER_SUFFIX_CONTEXT,
+            company_key=company_key or _p.WATCHPOWER_COMPANY_KEY,
         )
 
     async def __aenter__(self) -> AsyncShineMonitorAPI:
@@ -118,7 +119,10 @@ class AsyncShineMonitorAPI(AsyncActionsMixin):
             )
         return self._auth
 
-    async def _get_json(self, url: str) -> dict[str, Any]:
+    async def _get_json(self, url: str) -> Any:
         response = await self._http.get(url)
         response.raise_for_status()
-        return response.json()
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return response.text

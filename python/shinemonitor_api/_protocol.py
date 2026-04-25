@@ -15,13 +15,22 @@ from typing import Any
 
 from .models import DeviceIdentifier, LastData, parse_last_data
 
+# Vendor mobile host used by WatchPower-class apps. Vendor also exposes
+# api.shinemonitor.com for documented REST traffic; the suffix-context
+# pinning below targets the mobile host.
 DEFAULT_BASE_URL: str = "http://android.shinemonitor.com/public/"
-DEFAULT_SUFFIX_CONTEXT: str = (
+
+# App-context query string emitted by the WatchPower Android app. Pins
+# the request fingerprint to that app.
+WATCHPOWER_SUFFIX_CONTEXT: str = (
     "&i18n=pt_BR&lang=pt_BR&source=1"
     "&_app_client_=android&_app_id_=wifiapp.volfw.watchpower"
     "&_app_version_=1.0.6.3"
 )
-DEFAULT_COMPANY_KEY: str = "bnrl_frRFjEz8Mkn"
+
+# Vendor identifier issued to the WatchPower app. Reverse-engineered
+# from the Android client; required by authSource.
+WATCHPOWER_COMPANY_KEY: str = "bnrl_frRFjEz8Mkn"
 
 
 @dataclass(frozen=True)
@@ -42,8 +51,8 @@ class ProtocolConfig:
     """
 
     base_url: str = DEFAULT_BASE_URL
-    suffix_context: str = DEFAULT_SUFFIX_CONTEXT
-    company_key: str = DEFAULT_COMPANY_KEY
+    suffix_context: str = WATCHPOWER_SUFFIX_CONTEXT
+    company_key: str = WATCHPOWER_COMPANY_KEY
 
 
 def _salt() -> str:

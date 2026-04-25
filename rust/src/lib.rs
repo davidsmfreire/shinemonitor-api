@@ -2,18 +2,70 @@ use chrono::{NaiveDate, NaiveDateTime};
 use reqwest::blocking::Client;
 use serde::Serialize;
 use sha1::{Digest, Sha1};
+use std::collections::HashSet;
+use std::fmt;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-type ShineMonitorAPIResult = Result<serde_json::Value, Box<dyn std::error::Error>>;
+mod actions;
 
-#[derive(Debug, Serialize, Clone)]
-struct ShineMonitorDailyData {
-    // TODO
+pub type ShineMonitorAPIResult = Result<serde_json::Value, ApiError>;
+
+/// Documented auth-band error codes from chapter 2 (auth.html). Hex in
+/// docs, integers on the wire. Mirrors the python and Go clients.
+fn auth_err_codes() -> HashSet<i64> {
+    [0x0007, 0x000F, 0x0010, 0x0019, 0x0105, 0x010E]
+        .into_iter()
+        .collect()
 }
 
-impl ShineMonitorDailyData {
-    fn from_json(json: &serde_json::Value) -> Self {
-        todo!()
+/// Structured API error mirroring the python `ShineMonitorError` and Go
+/// `APIError`. `err == 0` is success and never produces this; non-zero
+/// `err` codes raise.
+#[derive(Debug, Clone)]
+pub struct ApiError {
+    pub err: i64,
+    pub desc: String,
+    pub payload: serde_json::Value,
+}
+
+impl ApiError {
+    pub fn is_auth(&self) -> bool {
+        auth_err_codes().contains(&self.err)
+    }
+
+    fn from_payload(payload: serde_json::Value) -> Self {
+        let err = payload
+            .get("err")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(-1);
+        let desc = payload
+            .get("desc")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        ApiError { err, desc, payload }
+    }
+
+    fn local(err: i64, desc: impl Into<String>) -> Self {
+        ApiError {
+            err,
+            desc: desc.into(),
+            payload: serde_json::Value::Null,
+        }
+    }
+}
+
+impl fmt::Display for ApiError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "shinemonitor: err=0x{:04X} desc={:?}", self.err, self.desc)
+    }
+}
+
+impl std::error::Error for ApiError {}
+
+impl From<reqwest::Error> for ApiError {
+    fn from(e: reqwest::Error) -> Self {
+        ApiError::local(-1, format!("transport: {e}"))
     }
 }
 
@@ -23,25 +75,6 @@ struct ShineMonitorDeviceParams {
     wifi_pn: String,
     dev_code: i32,
     dev_addr: i32,
-}
-
-#[derive(Debug, Serialize, Clone)]
-struct ShineMonitorFlowData {
-    grid_voltage: f32,
-    grid_frequency: f32,
-    ac_output_voltage: f32,
-    ac_output_active_power: i32,
-    output_load_percent: i8,
-    battery_capacity: i8,
-    battery_voltage: f32,
-    pv_input_voltage: f32,
-    pv_input_power: f32,
-}
-
-impl ShineMonitorFlowData {
-    fn from_json(json: &serde_json::Value) -> Self {
-        todo!()
-    }
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -388,11 +421,7 @@ impl ShineMonitorAPI {
         ShineMonitorAPI::sha1_str_lower_case(arg_concat.as_bytes())
     }
 
-    pub fn login(
-        &mut self,
-        username: &str,
-        password: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn login(&mut self, username: &str, password: &str) -> Result<(), ApiError> {
         let base_action = format!(
             "&action=authSource&usr={}&company-key={}{}",
             username, self._company_key, self._suffix_context
@@ -409,16 +438,13 @@ impl ShineMonitorAPI {
 
         let response: serde_json::Value = self._client.get(&url).send()?.json()?;
 
-        if response["err"].as_u64() == Some(0) {
+        if response["err"].as_i64() == Some(0) {
             self._secret = response["dat"]["secret"].as_str().unwrap().to_string();
             self._token = Some(response["dat"]["token"].as_str().unwrap().to_string());
             self._expire = Some(response["dat"]["expire"].as_u64().unwrap());
             Ok(())
         } else {
-            Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Login error: {:?}", response),
-            )))
+            Err(ApiError::from_payload(response))
         }
     }
 
@@ -433,53 +459,44 @@ impl ShineMonitorAPI {
             query.unwrap_or(""),
             self._suffix_context
         );
+        self._request_raw(&base_action)
+    }
+
+    /// Sign and dispatch a request whose `base_action` was assembled by the
+    /// caller. The generated action methods in `actions.rs` use this so they
+    /// don't have to drag the legacy device-params into every call.
+    pub fn _request_with(&self, action: &str, extra: &str) -> ShineMonitorAPIResult {
+        let base_action = format!("&action={}{}{}", action, extra, self._suffix_context);
+        self._request_raw(&base_action)
+    }
+
+    fn _request_raw(&self, base_action: &str) -> ShineMonitorAPIResult {
+        let token = self
+            ._token
+            .as_ref()
+            .ok_or_else(|| ApiError::local(-1, "not logged in"))?;
         let salt = ShineMonitorAPI::generate_salt();
-        let sign = self.hash(vec![
-            &salt,
-            &self._secret,
-            self._token.as_ref().unwrap(),
-            &base_action,
-        ]);
-        let auth = format!(
-            "?sign={}&salt={}&token={}",
-            sign,
-            salt,
-            self._token.as_ref().unwrap()
-        );
+        let sign = self.hash(vec![&salt, &self._secret, token, base_action]);
+        let auth = format!("?sign={}&salt={}&token={}", sign, salt, token);
         let url = format!("{}{}{}", self._base_url, auth, base_action);
 
         let response: serde_json::Value = self._client.get(&url).send()?.json()?;
 
-        if response["err"] == 0 {
+        if response["err"].as_i64() == Some(0) {
             Ok(response)
         } else {
-            Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("API error: {:?}", response),
-            )))
+            Err(ApiError::from_payload(response))
         }
     }
 
-    pub fn get_daily_data(
-        &self,
-        day: NaiveDate,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    pub fn get_daily_data(&self, day: NaiveDate) -> Result<serde_json::Value, ApiError> {
         let _date = day.format("%Y-%m-%d").to_string();
         let query = format!("&date={}", _date);
         self._request("queryDeviceDataOneDay", Some(&query))
     }
 
-    fn get_power_flow(&self) -> Result<ShineMonitorFlowData, Box<dyn std::error::Error>> {
-        match self._request("queryDeviceFlowPower", None) {
-            Ok(raw) => Ok(ShineMonitorFlowData::from_json(&raw)),
-            Err(e) => Err(e),
-        }
-    }
-
-    pub fn get_last_data(&self) -> Result<ShineMonitorLastData, Box<dyn std::error::Error>> {
-        match self._request("querySPDeviceLastData", None) {
-            Ok(raw) => Ok(ShineMonitorLastData::from_json(&raw)),
-            Err(e) => Err(e),
-        }
+    pub fn get_last_data(&self) -> Result<ShineMonitorLastData, ApiError> {
+        let raw = self._request("querySPDeviceLastData", None)?;
+        Ok(ShineMonitorLastData::from_json(&raw))
     }
 }

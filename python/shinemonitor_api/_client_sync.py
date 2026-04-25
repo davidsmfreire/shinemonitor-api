@@ -39,8 +39,8 @@ class ShineMonitorAPI(SyncActionsMixin):
         self._auth: _p.AuthState | None = None
         self._config = _p.ProtocolConfig(
             base_url=base_url or _p.DEFAULT_BASE_URL,
-            suffix_context=suffix_context or _p.DEFAULT_SUFFIX_CONTEXT,
-            company_key=company_key or _p.DEFAULT_COMPANY_KEY,
+            suffix_context=suffix_context or _p.WATCHPOWER_SUFFIX_CONTEXT,
+            company_key=company_key or _p.WATCHPOWER_COMPANY_KEY,
         )
 
     def __enter__(self) -> ShineMonitorAPI:

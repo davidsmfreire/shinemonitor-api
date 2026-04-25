@@ -135,8 +135,9 @@ fn login_bad_password_returns_error() {
     let server = MockServer::spawn(&python);
     let mut api = build_api(&server.url);
     let err = api.login(FIXTURE_USERNAME, "wrong").unwrap_err();
-    let msg = format!("{err}");
-    assert!(msg.contains("ERR_PASSWORD_ERROR"), "got {msg}");
+    assert_eq!(err.err, 0x0010);
+    assert!(err.is_auth(), "0x0010 must be auth-band");
+    assert!(err.desc.contains("ERR_PASSWORD_ERROR"), "got {}", err.desc);
 }
 
 #[test]
