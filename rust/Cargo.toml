@@ -4,7 +4,7 @@ version = "0.0.5"
 authors = ["David Freire"]
 edition = "2021"
 description = "WatchPower RestAPI Client for Rust"
-repository = "https://github.com/davidsmfreire/watchpower-api-rs"
+repository = "https://github.com/davidsmfreire/watchpower-api"
 license = "MIT"
 
 [lib]
