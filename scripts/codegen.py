@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404 - dev tool, only invokes hardcoded cargo/gofmt
 from pathlib import Path
 from typing import Any
 
