@@ -8,6 +8,7 @@
 use crate::{ApiError, ShineMonitorAPI};
 
 impl ShineMonitorAPI {
+
     /// Action `updateToken` — chapter 2.
     /// Vendor docs: https://api.shinemonitor.com/chapter2/updateToken.html
     pub fn update_token(&self) -> Result<serde_json::Value, ApiError> {
@@ -24,11 +25,7 @@ impl ShineMonitorAPI {
 
     /// Action `updatePassword` — chapter 2.
     /// Vendor docs: https://api.shinemonitor.com/chapter2/updatePassword.html
-    pub fn update_password(
-        &self,
-        old_pwd: &str,
-        new_pwd: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn update_password(&self, old_pwd: &str, new_pwd: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&oldPwd={}", old_pwd));
         extra.push_str(&format!("&newPwd={}", new_pwd));
@@ -37,30 +34,13 @@ impl ShineMonitorAPI {
 
     /// Action `queryPlants` — chapter 3.
     /// Vendor docs: https://api.shinemonitor.com/chapter3/queryPlants.html
-    pub fn query_plants(
-        &self,
-        status: Option<i64>,
-        order_by: Option<&str>,
-        plant_name: Option<&str>,
-        page: Option<i64>,
-        pagesize: Option<i64>,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_plants(&self, status: Option<i64>, order_by: Option<&str>, plant_name: Option<&str>, page: Option<i64>, pagesize: Option<i64>) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
-        if let Some(v) = status {
-            extra.push_str(&format!("&status={}", v));
-        }
-        if let Some(v) = order_by {
-            extra.push_str(&format!("&orderBy={}", v));
-        }
-        if let Some(v) = plant_name {
-            extra.push_str(&format!("&plantName={}", v));
-        }
-        if let Some(v) = page {
-            extra.push_str(&format!("&page={}", v));
-        }
-        if let Some(v) = pagesize {
-            extra.push_str(&format!("&pagesize={}", v));
-        }
+        if let Some(v) = status { extra.push_str(&format!("&status={}", v)); }
+        if let Some(v) = order_by { extra.push_str(&format!("&orderBy={}", v)); }
+        if let Some(v) = plant_name { extra.push_str(&format!("&plantName={}", v)); }
+        if let Some(v) = page { extra.push_str(&format!("&page={}", v)); }
+        if let Some(v) = pagesize { extra.push_str(&format!("&pagesize={}", v)); }
         self._request_with("queryPlants", &extra)
     }
 
@@ -81,11 +61,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryPlantEnergyDay` — chapter 3.
     /// Vendor docs: https://api.shinemonitor.com/chapter3/queryPlantEnergyDay.html
-    pub fn query_plant_energy_day(
-        &self,
-        plantid: i64,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_plant_energy_day(&self, plantid: i64, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&plantid={}", plantid));
         extra.push_str(&format!("&date={}", date));
@@ -94,11 +70,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryPlantEnergyMonth` — chapter 3.
     /// Vendor docs: https://api.shinemonitor.com/chapter3/queryPlantEnergyMonth.html
-    pub fn query_plant_energy_month(
-        &self,
-        plantid: i64,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_plant_energy_month(&self, plantid: i64, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&plantid={}", plantid));
         extra.push_str(&format!("&date={}", date));
@@ -107,11 +79,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryPlantEnergyYear` — chapter 3.
     /// Vendor docs: https://api.shinemonitor.com/chapter3/queryPlantEnergyYear.html
-    pub fn query_plant_energy_year(
-        &self,
-        plantid: i64,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_plant_energy_year(&self, plantid: i64, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&plantid={}", plantid));
         extra.push_str(&format!("&date={}", date));
@@ -128,10 +96,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryPlantActiveOuputPowerCurrent` — chapter 3.
     /// Vendor docs: https://api.shinemonitor.com/chapter3/queryPlantActiveOuputPowerCurrent.html
-    pub fn query_plant_active_ouput_power_current(
-        &self,
-        plantid: i64,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_plant_active_ouput_power_current(&self, plantid: i64) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&plantid={}", plantid));
         self._request_with("queryPlantActiveOuputPowerCurrent", &extra)
@@ -139,18 +104,10 @@ impl ShineMonitorAPI {
 
     /// Action `queryCollectors` — chapter 4.
     /// Vendor docs: https://api.shinemonitor.com/chapter4/queryCollectors.html
-    pub fn query_collectors(
-        &self,
-        page: Option<i64>,
-        pagesize: Option<i64>,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_collectors(&self, page: Option<i64>, pagesize: Option<i64>) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
-        if let Some(v) = page {
-            extra.push_str(&format!("&page={}", v));
-        }
-        if let Some(v) = pagesize {
-            extra.push_str(&format!("&pagesize={}", v));
-        }
+        if let Some(v) = page { extra.push_str(&format!("&page={}", v)); }
+        if let Some(v) = pagesize { extra.push_str(&format!("&pagesize={}", v)); }
         self._request_with("queryCollectors", &extra)
     }
 
@@ -180,18 +137,10 @@ impl ShineMonitorAPI {
 
     /// Action `queryDevices` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDevices.html
-    pub fn query_devices(
-        &self,
-        page: Option<i64>,
-        pagesize: Option<i64>,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_devices(&self, page: Option<i64>, pagesize: Option<i64>) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
-        if let Some(v) = page {
-            extra.push_str(&format!("&page={}", v));
-        }
-        if let Some(v) = pagesize {
-            extra.push_str(&format!("&pagesize={}", v));
-        }
+        if let Some(v) = page { extra.push_str(&format!("&page={}", v)); }
+        if let Some(v) = pagesize { extra.push_str(&format!("&pagesize={}", v)); }
         self._request_with("queryDevices", &extra)
     }
 
@@ -209,13 +158,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceInfo` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceInfo.html
-    pub fn query_device_info(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_info(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -226,13 +169,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceLastData` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceLastData.html
-    pub fn query_device_last_data(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_last_data(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -241,13 +178,7 @@ impl ShineMonitorAPI {
         self._request_with("queryDeviceLastData", &extra)
     }
 
-    pub fn query_sp_device_last_data(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_sp_device_last_data(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -258,14 +189,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceDataOneDay` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceDataOneDay.html
-    pub fn query_device_data_one_day(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_data_one_day(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -277,13 +201,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceStatus` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceStatus.html
-    pub fn query_device_status(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_status(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -294,13 +212,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceWarning` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceWarning.html
-    pub fn query_device_warning(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_warning(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -309,17 +221,20 @@ impl ShineMonitorAPI {
         self._request_with("queryDeviceWarning", &extra)
     }
 
+    /// Action `queryDeviceCtrlField` — chapter 5.
+    /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceCtrlField.html
+    pub fn query_device_ctrl_field(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
+        let mut extra = String::new();
+        extra.push_str(&format!("&pn={}", pn));
+        extra.push_str(&format!("&devcode={}", devcode));
+        extra.push_str(&format!("&devaddr={}", devaddr));
+        extra.push_str(&format!("&sn={}", sn));
+        self._request_with("queryDeviceCtrlField", &extra)
+    }
+
     /// Action `ctrlDevice` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/ctrlDevice.html
-    pub fn ctrl_device(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-        id: &str,
-        val: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn ctrl_device(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str, id: &str, val: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -332,14 +247,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceEnergyDay` — chapter 6.
     /// Vendor docs: https://api.shinemonitor.com/chapter6/queryDeviceEnergyDay.html
-    pub fn query_device_energy_day(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_energy_day(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -351,14 +259,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceEnergyMonth` — chapter 6.
     /// Vendor docs: https://api.shinemonitor.com/chapter6/queryDeviceEnergyMonth.html
-    pub fn query_device_energy_month(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_energy_month(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -370,14 +271,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceEnergyYear` — chapter 6.
     /// Vendor docs: https://api.shinemonitor.com/chapter6/queryDeviceEnergyYear.html
-    pub fn query_device_energy_year(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-        date: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_energy_year(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str, date: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -389,13 +283,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceEnergyTotal` — chapter 6.
     /// Vendor docs: https://api.shinemonitor.com/chapter6/queryDeviceEnergyTotal.html
-    pub fn query_device_energy_total(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_energy_total(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));
@@ -406,13 +294,7 @@ impl ShineMonitorAPI {
 
     /// Action `queryDeviceActiveOuputPowerCurrent` — chapter 6.
     /// Vendor docs: https://api.shinemonitor.com/chapter6/queryDeviceActiveOuputPowerCurrent.html
-    pub fn query_device_active_ouput_power_current(
-        &self,
-        pn: &str,
-        devcode: i64,
-        devaddr: i64,
-        sn: &str,
-    ) -> Result<serde_json::Value, ApiError> {
+    pub fn query_device_active_ouput_power_current(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
         let mut extra = String::new();
         extra.push_str(&format!("&pn={}", pn));
         extra.push_str(&format!("&devcode={}", devcode));

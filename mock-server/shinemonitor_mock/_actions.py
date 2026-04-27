@@ -155,6 +155,28 @@ def handle_query_device_warning(params: dict[str, str]) -> dict[str, Any]:
     return {"err": 0, "desc": "ERR_NONE", "dat": {}}
 
 
+def handle_query_device_ctrl_field(params: dict[str, str]) -> dict[str, Any]:
+    """Mock response for `queryDeviceCtrlField`."""
+    return {
+        "err": 0,
+        "desc": "ERR_NONE",
+        "dat": {
+            "field": [
+                {
+                    "id": "bse_output_source_priority",
+                    "name": "Output source priority",
+                    "val": "2",
+                    "item": [
+                        {"key": "0", "val": "Utility first"},
+                        {"key": "1", "val": "Solar first"},
+                        {"key": "2", "val": "SBU priority"},
+                    ],
+                }
+            ]
+        },
+    }
+
+
 def handle_ctrl_device(params: dict[str, str]) -> dict[str, Any]:
     """Mock response for `ctrlDevice`."""
     return {"err": 0, "desc": "ERR_NONE", "dat": {}}
@@ -226,6 +248,7 @@ HANDLERS: dict[str, Callable[[dict[str, str]], dict[str, Any]]] = {
     "queryDeviceDataOneDay": handle_query_device_data_one_day,
     "queryDeviceStatus": handle_query_device_status,
     "queryDeviceWarning": handle_query_device_warning,
+    "queryDeviceCtrlField": handle_query_device_ctrl_field,
     "ctrlDevice": handle_ctrl_device,
     "queryDeviceEnergyDay": handle_query_device_energy_day,
     "queryDeviceEnergyMonth": handle_query_device_energy_month,

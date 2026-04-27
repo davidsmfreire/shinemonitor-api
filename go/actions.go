@@ -244,6 +244,17 @@ func (c *Client) QueryDeviceWarning(ctx context.Context, pn string, devcode int6
 	return c.requestWith(ctx, "queryDeviceWarning", extra.String())
 }
 
+// QueryDeviceCtrlField calls the vendor action `queryDeviceCtrlField` (chapter 5).
+// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceCtrlField.html
+func (c *Client) QueryDeviceCtrlField(ctx context.Context, pn string, devcode int64, devaddr int64, sn string) (json.RawMessage, error) {
+	var extra strings.Builder
+	extra.WriteString(fmt.Sprintf("&pn=%s", pn))
+	extra.WriteString(fmt.Sprintf("&devcode=%v", devcode))
+	extra.WriteString(fmt.Sprintf("&devaddr=%v", devaddr))
+	extra.WriteString(fmt.Sprintf("&sn=%s", sn))
+	return c.requestWith(ctx, "queryDeviceCtrlField", extra.String())
+}
+
 // CtrlDevice calls the vendor action `ctrlDevice` (chapter 5).
 // Vendor docs: https://api.shinemonitor.com/chapter5/ctrlDevice.html
 func (c *Client) CtrlDevice(ctx context.Context, pn string, devcode int64, devaddr int64, sn string, id string, val string) (json.RawMessage, error) {

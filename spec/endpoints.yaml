@@ -336,6 +336,31 @@ endpoints:
       - { name: sn, type: string, required: true, doc: "Device SN" }
     returns: "{warning: [...]}"
 
+  - action: queryDeviceCtrlField
+    chapter: "5"
+    doc: chapter5/queryDeviceCtrlField.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{field: [{id, name, val, unit?, item?: [{key, val}]}]}"
+    mock_response:
+      field:
+        - id: bse_output_source_priority
+          name: Output source priority
+          val: "2"
+          item:
+            - { key: "0", val: Utility first }
+            - { key: "1", val: Solar first }
+            - { key: "2", val: SBU priority }
+
   - action: ctrlDevice
     chapter: "5"
     doc: chapter5/ctrlDevice.html
