@@ -447,11 +447,12 @@ def url_query_device_ctrl_value(
     devcode: int,
     devaddr: int,
     sn: str,
+    id: str,
 ) -> str:
     """Action `queryDeviceCtrlValue` — chapter 5.
     Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceCtrlValue.html
     """
-    base_action = f"&action=queryDeviceCtrlValue&pn={pn}&devcode={devcode}&devaddr={devaddr}&sn={sn}{config.suffix_context}"
+    base_action = f"&action=queryDeviceCtrlValue&pn={pn}&devcode={devcode}&devaddr={devaddr}&sn={sn}&id={id}{config.suffix_context}"
     return _p.authed_url(config, auth, base_action)
 
 

@@ -181,7 +181,7 @@ def handle_query_device_ctrl_value(params: dict[str, str]) -> dict[str, Any]:
     return {
         "err": 0,
         "desc": "ERR_NONE",
-        "dat": {"field": [{"id": "bse_output_source_priority", "val": "12338"}]},
+        "dat": {"id": "bse_output_source_priority", "val": "12338"},
     }
 
 

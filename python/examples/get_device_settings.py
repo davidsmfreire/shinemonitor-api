@@ -2,9 +2,9 @@
 
 `queryDeviceCtrlField` returns the schema (id, name, unit, allowed
 options) for every settable field on a device. `queryDeviceCtrlValue`
-returns the current value for each id. Joining them gives a complete
-settings snapshot. Pair the printed `id` with `api.ctrl_device(id=...,
-val=...)` to write a new value.
+returns the current value for a single field id — call it once per
+field to build a complete settings snapshot. Pair the printed `id`
+with `api.ctrl_device(id=..., val=...)` to write a new value.
 """
 
 import os
@@ -29,20 +29,21 @@ def main() -> None:
             devaddr=device.device_address,
             sn=device.serial_number,
         )
-        values = api.query_device_ctrl_value(
-            pn=device.wifi_pin,
-            devcode=device.device_code,
-            devaddr=device.device_address,
-            sn=device.serial_number,
-        )
-
-        current = {
-            f["id"]: f.get("val", "") for f in values.get("dat", {}).get("field", [])
-        }
 
         for field in schema.get("dat", {}).get("field", []):
             fid = field["id"]
-            val = current.get(fid, "")
+            try:
+                value_payload = api.query_device_ctrl_value(
+                    pn=device.wifi_pin,
+                    devcode=device.device_code,
+                    devaddr=device.device_address,
+                    sn=device.serial_number,
+                    id=fid,
+                )
+                val = value_payload.get("dat", {}).get("val", "")
+            except Exception as exc:
+                val = f"<error: {exc}>"
+
             line = f"  {fid:40s} = {val!r}"
             if unit := field.get("unit"):
                 line += f" {unit}"

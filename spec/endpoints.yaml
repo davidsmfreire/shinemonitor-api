@@ -374,10 +374,16 @@ endpoints:
         }
       - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
       - { name: sn, type: string, required: true, doc: "Device SN" }
-    returns: "{field: [{id, val}]} — current values for the schema returned by queryDeviceCtrlField"
+      - {
+          name: id,
+          type: string,
+          required: true,
+          doc: "Field id from queryDeviceCtrlField (one per call)",
+        }
+    returns: "{id, val} — current value for a single field id from queryDeviceCtrlField"
     mock_response:
-      field:
-        - { id: bse_output_source_priority, val: "12338" }
+      id: bse_output_source_priority
+      val: "12338"
 
   - action: ctrlDevice
     chapter: "5"
