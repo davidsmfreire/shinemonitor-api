@@ -1,6 +1,6 @@
 [package]
 name = "shinemonitor-api"
-version = "0.6.5"
+version = "0.7.0"
 authors = ["David Freire"]
 edition = "2021"
 description = "ShineMonitor REST API client (WatchPower, SolarPower, and other Voltronic-inverter vendor apps)."
