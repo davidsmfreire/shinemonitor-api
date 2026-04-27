@@ -350,16 +350,34 @@ endpoints:
         }
       - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
       - { name: sn, type: string, required: true, doc: "Device SN" }
-    returns: "{field: [{id, name, val, unit?, item?: [{key, val}]}]}"
+    returns: "{field: [{id, name, unit?, item?: [{key, val}]}]} — schema only; current values come from queryDeviceCtrlValue"
     mock_response:
       field:
         - id: bse_output_source_priority
           name: Output source priority
-          val: "2"
           item:
-            - { key: "0", val: Utility first }
-            - { key: "1", val: Solar first }
-            - { key: "2", val: SBU priority }
+            - { key: "12336", val: Utility Solar Bat }
+            - { key: "12337", val: Solar Utility Bat }
+            - { key: "12338", val: Solar Bat Utility }
+
+  - action: queryDeviceCtrlValue
+    chapter: "5"
+    doc: chapter5/queryDeviceCtrlValue.html
+    auth: true
+    params:
+      - { name: pn, type: string, required: true, doc: "Collector PN" }
+      - {
+          name: devcode,
+          type: int,
+          required: true,
+          doc: "Device protocol code",
+        }
+      - { name: devaddr, type: int, required: true, doc: "Device 485 address" }
+      - { name: sn, type: string, required: true, doc: "Device SN" }
+    returns: "{field: [{id, val}]} — current values for the schema returned by queryDeviceCtrlField"
+    mock_response:
+      field:
+        - { id: bse_output_source_priority, val: "12338" }
 
   - action: ctrlDevice
     chapter: "5"

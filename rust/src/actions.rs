@@ -232,6 +232,17 @@ impl ShineMonitorAPI {
         self._request_with("queryDeviceCtrlField", &extra)
     }
 
+    /// Action `queryDeviceCtrlValue` — chapter 5.
+    /// Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceCtrlValue.html
+    pub fn query_device_ctrl_value(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str) -> Result<serde_json::Value, ApiError> {
+        let mut extra = String::new();
+        extra.push_str(&format!("&pn={}", pn));
+        extra.push_str(&format!("&devcode={}", devcode));
+        extra.push_str(&format!("&devaddr={}", devaddr));
+        extra.push_str(&format!("&sn={}", sn));
+        self._request_with("queryDeviceCtrlValue", &extra)
+    }
+
     /// Action `ctrlDevice` — chapter 5.
     /// Vendor docs: https://api.shinemonitor.com/chapter5/ctrlDevice.html
     pub fn ctrl_device(&self, pn: &str, devcode: i64, devaddr: i64, sn: &str, id: &str, val: &str) -> Result<serde_json::Value, ApiError> {

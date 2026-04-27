@@ -440,6 +440,26 @@ def parse_query_device_ctrl_field(payload: dict[str, Any]) -> dict[str, Any]:
     return _p.check_response(payload)
 
 
+def url_query_device_ctrl_value(
+    config: _p.ProtocolConfig,
+    auth: _p.AuthState,
+    pn: str,
+    devcode: int,
+    devaddr: int,
+    sn: str,
+) -> str:
+    """Action `queryDeviceCtrlValue` — chapter 5.
+    Vendor docs: https://api.shinemonitor.com/chapter5/queryDeviceCtrlValue.html
+    """
+    base_action = f"&action=queryDeviceCtrlValue&pn={pn}&devcode={devcode}&devaddr={devaddr}&sn={sn}{config.suffix_context}"
+    return _p.authed_url(config, auth, base_action)
+
+
+def parse_query_device_ctrl_value(payload: dict[str, Any]) -> dict[str, Any]:
+    """Validate `err` then return the full payload for `queryDeviceCtrlValue`."""
+    return _p.check_response(payload)
+
+
 def url_ctrl_device(
     config: _p.ProtocolConfig,
     auth: _p.AuthState,

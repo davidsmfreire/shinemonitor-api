@@ -244,6 +244,20 @@ class SyncActionsMixin:
         )
         return _actions.parse_query_device_ctrl_field(self._get_json(url))
 
+    def query_device_ctrl_value(
+        self, *, pn: str, devcode: int, devaddr: int, sn: str
+    ) -> Any:
+        """Call action `queryDeviceCtrlValue` (chapter 5)."""
+        url = _actions.url_query_device_ctrl_value(
+            self._config,
+            self._require_auth(),
+            pn=pn,
+            devcode=devcode,
+            devaddr=devaddr,
+            sn=sn,
+        )
+        return _actions.parse_query_device_ctrl_value(self._get_json(url))
+
     def ctrl_device(
         self, *, pn: str, devcode: int, devaddr: int, sn: str, id: str, val: str
     ) -> Any:
@@ -585,6 +599,20 @@ class AsyncActionsMixin:
             sn=sn,
         )
         return _actions.parse_query_device_ctrl_field(await self._get_json(url))
+
+    async def query_device_ctrl_value(
+        self, *, pn: str, devcode: int, devaddr: int, sn: str
+    ) -> Any:
+        """Call action `queryDeviceCtrlValue` (chapter 5)."""
+        url = _actions.url_query_device_ctrl_value(
+            self._config,
+            self._require_auth(),
+            pn=pn,
+            devcode=devcode,
+            devaddr=devaddr,
+            sn=sn,
+        )
+        return _actions.parse_query_device_ctrl_value(await self._get_json(url))
 
     async def ctrl_device(
         self, *, pn: str, devcode: int, devaddr: int, sn: str, id: str, val: str

@@ -1,8 +1,10 @@
-"""Read inverter configuration via `queryDeviceCtrlField`.
+"""Read inverter configuration via `queryDeviceCtrlField` + `queryDeviceCtrlValue`.
 
-Lists every settable field for each connected device with current value
-and (when applicable) the enumerated options. Pair the printed `id` with
-`api.ctrl_device(id=..., val=...)` to write a new value.
+`queryDeviceCtrlField` returns the schema (id, name, unit, allowed
+options) for every settable field on a device. `queryDeviceCtrlValue`
+returns the current value for each id. Joining them gives a complete
+settings snapshot. Pair the printed `id` with `api.ctrl_device(id=...,
+val=...)` to write a new value.
 """
 
 import os
@@ -21,21 +23,33 @@ def main() -> None:
 
     for device in api.get_devices():
         print(f"\n=== {device.device_alias or device.serial_number} ===")
-        payload = api.query_device_ctrl_field(
+        schema = api.query_device_ctrl_field(
+            pn=device.wifi_pin,
+            devcode=device.device_code,
+            devaddr=device.device_address,
+            sn=device.serial_number,
+        )
+        values = api.query_device_ctrl_value(
             pn=device.wifi_pin,
             devcode=device.device_code,
             devaddr=device.device_address,
             sn=device.serial_number,
         )
 
-        for field in payload.get("dat", {}).get("field", []):
-            line = f"  {field['id']:40s} = {field.get('val', '')!r}"
+        current = {
+            f["id"]: f.get("val", "") for f in values.get("dat", {}).get("field", [])
+        }
+
+        for field in schema.get("dat", {}).get("field", []):
+            fid = field["id"]
+            val = current.get(fid, "")
+            line = f"  {fid:40s} = {val!r}"
             if unit := field.get("unit"):
                 line += f" {unit}"
             print(line)
 
             for opt in field.get("item", []) or []:
-                marker = " <--" if str(opt["key"]) == str(field.get("val")) else ""
+                marker = " <--" if str(opt["key"]) == str(val) else ""
                 print(f"      {opt['key']}: {opt['val']}{marker}")
 
 
