@@ -442,11 +442,15 @@ def main() -> None:
     for path in (PY_OUT, PY_METHODS_OUT, MOCK_OUT, RUST_OUT, GO_OUT):
         print(f"wrote {path.relative_to(ROOT)}")
 
-    if shutil.which("cargo"):
-        subprocess.run(["cargo", "fmt"], cwd=RUST_OUT.parent.parent, check=True)
+    if cargo := shutil.which("cargo"):
+        subprocess.run(  # nosec B603 - hardcoded dev tool, no untrusted input
+            [cargo, "fmt"], cwd=RUST_OUT.parent.parent, check=True
+        )
         print("ran cargo fmt")
-    if shutil.which("gofmt"):
-        subprocess.run(["gofmt", "-w", str(GO_OUT)], check=True)
+    if gofmt := shutil.which("gofmt"):
+        subprocess.run(  # nosec B603 - hardcoded dev tool, no untrusted input
+            [gofmt, "-w", str(GO_OUT)], check=True
+        )
         print("ran gofmt")
 
 
