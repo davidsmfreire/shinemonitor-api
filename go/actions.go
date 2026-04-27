@@ -13,7 +13,6 @@ var _ = strings.Builder{} // force import even if no string params
 var _ = fmt.Sprintf       // ditto
 var _ context.Context     // ditto
 
-
 // UpdateToken calls the vendor action `updateToken` (chapter 2).
 // Vendor docs: https://api.shinemonitor.com/chapter2/updateToken.html
 func (c *Client) UpdateToken(ctx context.Context) (json.RawMessage, error) {

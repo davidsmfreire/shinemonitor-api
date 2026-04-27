@@ -16,6 +16,8 @@ Re-run from repo root after spec edits:
 from __future__ import annotations
 
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -439,6 +441,13 @@ def main() -> None:
     GO_OUT.write_text(render_go(spec))
     for path in (PY_OUT, PY_METHODS_OUT, MOCK_OUT, RUST_OUT, GO_OUT):
         print(f"wrote {path.relative_to(ROOT)}")
+
+    if shutil.which("cargo"):
+        subprocess.run(["cargo", "fmt"], cwd=RUST_OUT.parent.parent, check=True)
+        print("ran cargo fmt")
+    if shutil.which("gofmt"):
+        subprocess.run(["gofmt", "-w", str(GO_OUT)], check=True)
+        print("ran gofmt")
 
 
 if __name__ == "__main__":
