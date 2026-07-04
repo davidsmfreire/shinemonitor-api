@@ -8,3 +8,6 @@ DOMAIN = "shinemonitor"
 MANUFACTURER = "ShineMonitor"
 
 UPDATE_INTERVAL = timedelta(seconds=60)
+
+CONF_APP_PROFILE = "app_profile"
+DEFAULT_APP_PROFILE = "watchpower"

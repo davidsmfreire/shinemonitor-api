@@ -8,7 +8,13 @@ Two thin I/O shells over a shared sansio core:
 from __future__ import annotations
 
 from ._client_sync import ShineMonitorAPI
-from ._protocol import AuthState, ShineMonitorAuthError, ShineMonitorError
+from ._protocol import (
+    KNOWN_APPS,
+    AppProfile,
+    AuthState,
+    ShineMonitorAuthError,
+    ShineMonitorError,
+)
 from .models import (
     DeviceIdentifier,
     LastData,
@@ -22,6 +28,8 @@ from .models import (
 __version__ = "0.5.0"
 
 __all__ = [
+    "KNOWN_APPS",
+    "AppProfile",
     "AuthState",
     "DeviceIdentifier",
     "LastData",

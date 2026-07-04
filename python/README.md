@@ -57,6 +57,30 @@ asyncio.run(main())
 Both clients accept an `httpx.Client` / `httpx.AsyncClient` for reuse
 in apps that already manage one (e.g. Home Assistant).
 
+## Targeting a different vendor app
+
+The ShineMonitor backend is shared by many white-label apps (WatchPower,
+RenoClient / Renovigi, ...). Devices are scoped to the app that registered
+them, so pass the matching profile — WatchPower is the default.
+
+```python
+from shinemonitor_api import ShineMonitorAPI, AppProfile
+
+# a shipped preset
+with ShineMonitorAPI(app=AppProfile.RENOCLIENT) as api:
+    api.login(username, password)
+    devices = api.get_devices()
+
+# an app without a preset — supply its identifiers
+custom = AppProfile(app_id="com.example.app", app_version="1.0.0")
+api = ShineMonitorAPI(app=custom)
+```
+
+`AppProfile.from_name("renoclient")` resolves a shipped preset by name
+(handy when the app is chosen from config). `get_devices()` automatically
+falls back from the undocumented `webQueryDeviceEs` action to the
+documented `queryDevices` when the former reports no devices.
+
 ## Migrating from `watchpower-api`
 
 `watchpower-api` is the previous PyPI name. The package was renamed to

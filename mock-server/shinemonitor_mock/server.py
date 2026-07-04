@@ -201,7 +201,22 @@ def create_app() -> FastAPI:
             return _err(0x0007, "ERR_PARAMETER_VALUE_BAD")
 
         if action == "webQueryDeviceEs":
+            # Devices are scoped to the app that registered them. A device
+            # bound under a different white-label (e.g. RenoClient) is not
+            # returned by this action — the backend answers ERR_NOT_FOUND_DEVICE.
+            if "renoclient" in params.get("_app_id_", ""):
+                return _err(0x0102, "ERR_NOT_FOUND_DEVICE")
             return _ok({"device": DEVICES})
+        if action == "queryDevices":
+            # Documented whole-account list; app-agnostic, paginated.
+            return _ok(
+                {
+                    "total": len(DEVICES),
+                    "page": 0,
+                    "pagesize": len(DEVICES),
+                    "device": DEVICES,
+                }
+            )
         if action == "querySPDeviceLastData":
             sn = params.get("sn", "")
             snapshot = LAST_DATA_BY_SN.get(sn)
