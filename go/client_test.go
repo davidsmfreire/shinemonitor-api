@@ -123,6 +123,61 @@ func TestLoginBadPassword(t *testing.T) {
 	}
 }
 
+func TestGetDevices(t *testing.T) {
+	srv := startMock(t)
+	c := newTestClient(srv.URL)
+	if err := c.Login(context.Background(), fixtureUser, fixturePass); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+	devices, err := c.GetDevices(context.Background())
+	if err != nil {
+		t.Fatalf("GetDevices: %v", err)
+	}
+	if len(devices) != 2 {
+		t.Fatalf("expected 2 devices, got %d", len(devices))
+	}
+	if devices[0].SerialNumber != "9620230101001" {
+		t.Fatalf("unexpected serial: %s", devices[0].SerialNumber)
+	}
+}
+
+func TestGetDevicesFallsBackOn258(t *testing.T) {
+	srv := startMock(t)
+	c := New(
+		WithApp(AppProfileRenoClient),
+		WithBaseURL(srv.URL+"/public/"),
+		WithCompanyKey("test-company"),
+	)
+	if err := c.Login(context.Background(), fixtureUser, fixturePass); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+	devices, err := c.GetDevices(context.Background())
+	if err != nil {
+		t.Fatalf("GetDevices: %v", err)
+	}
+	if len(devices) != 2 {
+		t.Fatalf("expected 2 devices, got %d", len(devices))
+	}
+	if devices[0].SerialNumber != "9620230101001" {
+		t.Fatalf("unexpected serial: %s", devices[0].SerialNumber)
+	}
+}
+
+func TestGetDevicesUnauthed(t *testing.T) {
+	c := newTestClient("http://unused")
+	_, err := c.GetDevices(context.Background())
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected APIError, got %T", err)
+	}
+	if apiErr.Err != -1 {
+		t.Fatalf("expected err=-1, got %d", apiErr.Err)
+	}
+}
+
 func TestQueryAccountInfo(t *testing.T) {
 	srv := startMock(t)
 	c := newTestClient(srv.URL)

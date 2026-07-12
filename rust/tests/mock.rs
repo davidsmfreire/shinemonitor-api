@@ -137,6 +137,42 @@ fn login_bad_password_returns_error() {
 }
 
 #[test]
+fn get_devices_list() {
+    let Some(python) = find_python() else {
+        eprintln!("skipping");
+        return;
+    };
+
+    let server = MockServer::spawn(&python);
+    let mut api = build_api(&server.url);
+    api.login(FIXTURE_USERNAME, FIXTURE_PASSWORD)
+        .expect("login");
+    let devices = api.get_devices().expect("get_devices");
+    assert_eq!(devices.len(), 2);
+    assert_eq!(devices[0].serial_number, "9620230101001");
+    assert_eq!(devices[1].serial_number, "9620230101002");
+}
+
+#[test]
+fn get_devices_falls_back_on_258() {
+    let Some(python) = find_python() else {
+        eprintln!("skipping");
+        return;
+    };
+
+    let server = MockServer::spawn(&python);
+    let mut api = ShineMonitorAPI::new(FIXTURE_SN, FIXTURE_PN, FIXTURE_DEVCODE, FIXTURE_DEVADDR)
+        .with_app_profile(shinemonitor_api::AppProfile::RENOCLIENT)
+        .with_base_url(format!("{}/public/", server.url))
+        .with_company_key(FIXTURE_COMPANY_KEY);
+    api.login(FIXTURE_USERNAME, FIXTURE_PASSWORD)
+        .expect("login");
+    let devices = api.get_devices().expect("get_devices fallback");
+    assert_eq!(devices.len(), 2);
+    assert_eq!(devices[0].serial_number, "9620230101001");
+}
+
+#[test]
 fn daily_data_returns_payload() {
     let Some(python) = find_python() else {
         eprintln!("skipping");

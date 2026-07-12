@@ -35,6 +35,68 @@ const (
 	WatchPowerCompanyKey = "bnrl_frRFjEz8Mkn"
 )
 
+// AppProfile models a white-label vendor app's request identity.
+// The ShineMonitor backend is multi-tenant: devices are scoped to the
+// app that registered them, identified on the wire by _app_id_.
+type AppProfile struct {
+	AppID       string
+	AppVersion  string
+	CompanyKey  string
+	BaseURL     string
+	Locale      string
+	Source      int
+	AppClient   string
+}
+
+// suffixContext returns the 7-field query suffix this app injects into
+// every request. Mirrors Python's AppProfile._suffix_context().
+func (p *AppProfile) suffixContext() string {
+	return fmt.Sprintf(
+		"&i18n=%s&lang=%s&source=%d&_app_client_=%s&_app_id_=%s&_app_version_=%s",
+		p.Locale, p.Locale, p.Source, p.AppClient, p.AppID, p.AppVersion,
+	)
+}
+
+// AppProfileWatchPower is the default WatchPower app identity.
+var AppProfileWatchPower = AppProfile{
+	AppID:      "wifiapp.volfw.watchpower",
+	AppVersion: "1.0.6.3",
+	CompanyKey:  "bnrl_frRFjEz8Mkn",
+	BaseURL:     DefaultBaseURL,
+	Locale:      "pt_BR",
+	Source:      1,
+	AppClient:   "android",
+}
+
+// AppProfileRenoClient is the RenoClient / Renovigi white-label identity.
+var AppProfileRenoClient = AppProfile{
+	AppID:      "com.eybond.renoclient",
+	AppVersion: "1.3.2.0",
+	CompanyKey:  "bnrl_frRFjEz8Mkn",
+	BaseURL:     DefaultBaseURL,
+	Locale:      "pt_BR",
+	Source:      1,
+	AppClient:   "android",
+}
+
+// KnownApps is the registry of all known vendor app profiles. The
+// GetDevices fallback iterates this map when the primary profile
+// returns ERR_NOT_FOUND_DEVICE (err 258 / 0x0102).
+var KnownApps = map[string]AppProfile{
+	"watchpower": AppProfileWatchPower,
+	"renoclient": AppProfileRenoClient,
+}
+
+// Device is an inverter returned by the device list endpoints
+// (webQueryDeviceEs / queryDevices).
+type Device struct {
+	DeviceAlias   *string `json:"devalias"`
+	SerialNumber  string  `json:"sn"`
+	WifiPin       string  `json:"pn"`
+	DeviceAddress int64   `json:"devaddr"`
+	DeviceCode    int64   `json:"devcode"`
+}
+
 // Auth is the result of a successful login — what subsequent requests sign with.
 type Auth struct {
 	Token    string
@@ -49,6 +111,7 @@ type Client struct {
 	BaseURL       string
 	SuffixContext string
 	CompanyKey    string
+	AppID         string
 	HTTP          *http.Client
 	auth          *Auth
 }
@@ -69,12 +132,24 @@ func WithCompanyKey(s string) Option { return func(c *Client) { c.CompanyKey = s
 // WithHTTP injects a caller-managed *http.Client (custom timeouts/transport).
 func WithHTTP(h *http.Client) Option { return func(c *Client) { c.HTTP = h } }
 
+// WithApp sets the app profile and its associated fields
+// (BaseURL, SuffixContext, CompanyKey) in one shot.
+func WithApp(p AppProfile) Option {
+	return func(c *Client) {
+		c.BaseURL = p.BaseURL
+		c.SuffixContext = p.suffixContext()
+		c.CompanyKey = p.CompanyKey
+		c.AppID = p.AppID
+	}
+}
+
 // New constructs a Client. Defaults match the WatchPower Android app context.
 func New(opts ...Option) *Client {
 	c := &Client{
 		BaseURL:       DefaultBaseURL,
 		SuffixContext: WatchPowerSuffixContext,
 		CompanyKey:    WatchPowerCompanyKey,
+		AppID:         "wifiapp.volfw.watchpower",
 		HTTP:          &http.Client{Timeout: 10 * time.Second},
 	}
 	for _, opt := range opts {
@@ -144,6 +219,65 @@ func (c *Client) Login(ctx context.Context, username, password string) error {
 		Acquired: time.Now(),
 	}
 	return nil
+}
+
+// GetDevices enumerates inverters on the account.
+//
+// First tries the configured app profile's `webQueryDeviceEs`; on
+// ERR_NOT_FOUND_DEVICE (err 258 = 0x0102) it retries each known app
+// profile. Non-258 errors propagate immediately.
+func (c *Client) GetDevices(ctx context.Context) ([]Device, error) {
+	if c.auth == nil {
+		return nil, &APIError{Err: -1, Desc: "not logged in"}
+	}
+	var lastErr error
+
+	type try struct {
+		appID string
+		sfx   string
+	}
+	var tries []try
+	tries = append(tries, try{appID: c.AppID, sfx: c.SuffixContext})
+	for _, known := range KnownApps {
+		if known.AppID != c.AppID {
+			tries = append(tries, try{appID: known.AppID, sfx: known.suffixContext()})
+		}
+	}
+
+	for _, t := range tries {
+		baseAction := "&action=webQueryDeviceEs" + t.sfx
+		salt := saltMs()
+		sign := sha1Hex(salt + c.auth.Secret + c.auth.Token + baseAction)
+		url := fmt.Sprintf("%s?sign=%s&salt=%s&token=%s%s", c.BaseURL, sign, salt, c.auth.Token, baseAction)
+
+		body, err := c.fetch(ctx, url)
+		if err != nil {
+			return nil, err
+		}
+		var head struct {
+			Err  int    `json:"err"`
+			Desc string `json:"desc"`
+		}
+		if err := json.Unmarshal(body, &head); err != nil {
+			return nil, fmt.Errorf("decode response: %w", err)
+		}
+		if head.Err == 0 {
+			var resp struct {
+				Dat struct {
+					Devices []Device `json:"device"`
+				} `json:"dat"`
+			}
+			if err := json.Unmarshal(body, &resp); err != nil {
+				return nil, fmt.Errorf("decode devices: %w", err)
+			}
+			return resp.Dat.Devices, nil
+		}
+		if head.Err != 0x0102 {
+			return nil, &APIError{Err: head.Err, Desc: head.Desc, Raw: body}
+		}
+		lastErr = &APIError{Err: head.Err, Desc: head.Desc, Raw: body}
+	}
+	return nil, lastErr
 }
 
 // requestWith signs and dispatches an authed request whose action-specific

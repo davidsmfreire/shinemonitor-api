@@ -1,6 +1,6 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use reqwest::blocking::Client;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::collections::HashSet;
 use std::fmt;
@@ -77,6 +77,75 @@ struct ShineMonitorDeviceParams {
     dev_code: i32,
     dev_addr: i32,
 }
+
+/// Device as returned by the device list endpoints (webQueryDeviceEs /
+/// queryDevices). Fields use the same serde aliases as the Python
+/// `DeviceIdentifier` model for wire compatibility.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceIdentifier {
+    #[serde(alias = "devalias")]
+    pub device_alias: Option<String>,
+    #[serde(alias = "sn")]
+    pub serial_number: String,
+    #[serde(alias = "pn")]
+    pub wifi_pin: String,
+    #[serde(alias = "devaddr")]
+    pub device_address: i64,
+    #[serde(alias = "devcode")]
+    pub device_code: i64,
+}
+
+/// White-label vendor app identity. The ShineMonitor backend is
+/// multi-tenant: devices are scoped to the `_app_id_` they were
+/// registered under. Two presets (`WATCHPOWER`, `RENOCLIENT`) are
+/// shipped; construct a custom one for other Eybond white-labels.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppProfile {
+    pub app_id: &'static str,
+    pub app_version: &'static str,
+    pub company_key: &'static str,
+    pub base_url: &'static str,
+    pub locale: &'static str,
+    pub source: i32,
+    pub app_client: &'static str,
+}
+
+impl AppProfile {
+    /// Build the query-string suffix this app injects into every request.
+    pub fn suffix_context(&self) -> String {
+        format!(
+            "&i18n={}&lang={}&source={}&_app_client_={}&_app_id_={}&_app_version_={}",
+            self.locale, self.locale, self.source, self.app_client, self.app_id, self.app_version
+        )
+    }
+
+    /// WatchPower (wifiapp.volfw.watchpower) — the default profile.
+    pub const WATCHPOWER: AppProfile = AppProfile {
+        app_id: "wifiapp.volfw.watchpower",
+        app_version: "1.0.6.3",
+        company_key: "bnrl_frRFjEz8Mkn",
+        base_url: "http://android.shinemonitor.com/public/",
+        locale: "pt_BR",
+        source: 1,
+        app_client: "android",
+    };
+
+    /// RenoClient / Renovigi (com.eybond.renoclient).
+    pub const RENOCLIENT: AppProfile = AppProfile {
+        app_id: "com.eybond.renoclient",
+        app_version: "1.3.2.0",
+        company_key: "bnrl_frRFjEz8Mkn",
+        base_url: "http://android.shinemonitor.com/public/",
+        locale: "pt_BR",
+        source: 1,
+        app_client: "android",
+    };
+}
+
+/// All known vendor app profiles. The [`crate::ShineMonitorAPI::get_devices`]
+/// fallback iterates this list when the primary profile returns
+/// `ERR_NOT_FOUND_DEVICE` (err 258 / 0x0102).
+pub const KNOWN_APPS: &[AppProfile] = &[AppProfile::WATCHPOWER, AppProfile::RENOCLIENT];
 
 #[derive(Debug, Serialize, Clone)]
 pub struct ShineMonitorLastDataGrid {
@@ -367,6 +436,7 @@ pub struct ShineMonitorAPI {
     _base_url: String,
     _suffix_context: String,
     _company_key: String,
+    _app_profile: AppProfile,
     _token: Option<String>,
     _secret: String,
     _expire: Option<u64>,
@@ -377,9 +447,10 @@ pub struct ShineMonitorAPI {
 impl ShineMonitorAPI {
     pub fn new(serial_number: &str, wifi_pn: &str, dev_code: i32, dev_addr: i32) -> Self {
         ShineMonitorAPI {
-            _base_url: "http://android.shinemonitor.com/public/".to_string(),
-            _suffix_context: "&i18n=pt_BR&lang=pt_BR&source=1&_app_client_=android&_app_id_=wifiapp.volfw.watchpower&_app_version_=1.0.6.3".to_string(),
-            _company_key: "bnrl_frRFjEz8Mkn".to_string(),
+            _base_url: AppProfile::WATCHPOWER.base_url.to_string(),
+            _suffix_context: AppProfile::WATCHPOWER.suffix_context(),
+            _company_key: AppProfile::WATCHPOWER.company_key.to_string(),
+            _app_profile: AppProfile::WATCHPOWER,
             _token: None,
             _secret: "ems_secret".to_string(),
             _expire: None,
@@ -405,6 +476,16 @@ impl ShineMonitorAPI {
 
     pub fn with_company_key(mut self, key: impl Into<String>) -> Self {
         self._company_key = key.into();
+        self
+    }
+
+    /// Override the app profile and its associated fields
+    /// (`_base_url`, `_suffix_context`, `_company_key`).
+    pub fn with_app_profile(mut self, profile: AppProfile) -> Self {
+        self._app_profile = profile.clone();
+        self._base_url = profile.base_url.to_string();
+        self._suffix_context = profile.suffix_context();
+        self._company_key = profile.company_key.to_string();
         self
     }
 
@@ -504,5 +585,65 @@ impl ShineMonitorAPI {
     pub fn get_last_data(&self) -> Result<ShineMonitorLastData, ApiError> {
         let raw = self._request("querySPDeviceLastData", None)?;
         Ok(ShineMonitorLastData::from_json(&raw))
+    }
+
+    /// Enumerate devices across all known app profiles.
+    ///
+    /// First tries the configured profile's `webQueryDeviceEs`; on
+    /// `ERR_NOT_FOUND_DEVICE` (err 258 = 0x0102) it retries each known
+    /// profile. Non-258 errors propagate immediately.
+    pub fn get_devices(&self) -> Result<Vec<DeviceIdentifier>, ApiError> {
+        let token = self
+            ._token
+            .as_ref()
+            .ok_or_else(|| ApiError::local(-1, "not logged in"))?;
+        let mut last_err: Option<ApiError> = None;
+
+        let current_id = self._app_profile.app_id;
+        let mut profiles: Vec<&AppProfile> = vec![&self._app_profile];
+        for known in KNOWN_APPS {
+            if known.app_id != current_id {
+                profiles.push(known);
+            }
+        }
+
+        for profile in profiles {
+            let suffix = profile.suffix_context();
+            let base_action = format!("&action=webQueryDeviceEs{}", suffix);
+            let salt = ShineMonitorAPI::generate_salt();
+            let sign = self.hash(vec![&salt, &self._secret, token, &base_action]);
+            let auth = format!("?sign={}&salt={}&token={}", sign, salt, token);
+            let url = format!("{}{}{}", self._base_url, auth, base_action);
+
+            let response: serde_json::Value = match self._client.get(&url).send() {
+                Ok(r) => match r.json() {
+                    Ok(v) => v,
+                    Err(e) => return Err(ApiError::from(e)),
+                },
+                Err(e) => return Err(ApiError::from(e)),
+            };
+
+            if response["err"].as_i64() == Some(0) {
+                let devices: Vec<DeviceIdentifier> = response["dat"]["device"]
+                    .as_array()
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| {
+                                serde_json::from_value(v.clone()).ok()
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                return Ok(devices);
+            }
+
+            let api_err = ApiError::from_payload(response);
+            if api_err.err != 0x0102 {
+                return Err(api_err);
+            }
+            last_err = Some(api_err);
+        }
+
+        Err(last_err.unwrap_or_else(|| ApiError::local(258, "all app profiles returned ERR_NOT_FOUND_DEVICE")))
     }
 }
