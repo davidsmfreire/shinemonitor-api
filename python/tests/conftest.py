@@ -70,11 +70,14 @@ async def async_http() -> AsyncIterator[httpx.AsyncClient]:
 
 
 @pytest.fixture
-def client_kwargs(base_url: str) -> dict[str, str]:
+def client_kwargs(base_url: str) -> dict[str, object]:
+    from shinemonitor_api import AppProfile
+
     return {
-        "base_url": base_url,
-        "company_key": "test-company",
-        "suffix_context": (
-            "&source=1&_app_client_=android&_app_id_=test.app&_app_version_=0.0.1"
+        "app": AppProfile(
+            app_id="test.app",
+            app_version="0.0.1",
+            company_key="test-company",
+            base_url=base_url,
         ),
     }

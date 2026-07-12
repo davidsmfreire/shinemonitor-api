@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from shinemonitor_api import ShineMonitorAuthError
+from shinemonitor_api import AppProfile, ShineMonitorAuthError
 from shinemonitor_api.aio import AsyncShineMonitorAPI
 from shinemonitor_api.models import DeviceIdentifier, LastData
 
@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import CONF_APP_PROFILE, DEFAULT_APP_PROFILE, DOMAIN, UPDATE_INTERVAL
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -41,7 +41,11 @@ class ShineMonitorCoordinator(DataUpdateCoordinator[dict[str, LastData]]):
         )
         self._username = username
         self._password = password
-        self._api = AsyncShineMonitorAPI(client=get_async_client(hass))
+        app_profile = entry.data.get(CONF_APP_PROFILE, DEFAULT_APP_PROFILE)
+        self._api = AsyncShineMonitorAPI(
+            app=AppProfile.from_name(app_profile),
+            client=get_async_client(hass),
+        )
         self._logged_in = False
         self.devices: list[DeviceIdentifier] = []
 

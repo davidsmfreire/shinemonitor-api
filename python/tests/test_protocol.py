@@ -8,6 +8,7 @@ from datetime import date
 import pytest
 
 from shinemonitor_api import (
+    AppProfile,
     AuthState,
     ShineMonitorAuthError,
     ShineMonitorError,
@@ -21,6 +22,7 @@ from shinemonitor_api._protocol import (
     parse_devices,
     parse_last,
     parse_login,
+    query_devices_url,
 )
 from shinemonitor_api.models import DeviceIdentifier
 
@@ -84,6 +86,64 @@ def test_daily_data_url_uses_iso_date() -> None:
     auth = AuthState(token="T", secret="S", expire=600)
     url = daily_data_url(cfg, auth, date(2026, 4, 25), "SN", "PN", 99, 1)
     assert "&date=2026-04-25" in url
+
+
+def test_watchpower_profile_suffix_context() -> None:
+    assert AppProfile.WATCHPOWER._suffix_context() == (
+        "&i18n=en_US&lang=en_US&source=1&_app_client_=android"
+        "&_app_id_=wifiapp.volfw.watchpower&_app_version_=1.0.6.3"
+    )
+
+
+def test_renoclient_profile_fields() -> None:
+    p = AppProfile.RENOCLIENT
+    assert p.app_id == "com.eybond.renoclient"
+    assert p.app_version == "1.3.2.0"
+    assert p.company_key == "bnrl_frRFjEz8Mkn"
+
+
+def test_renoclient_suffix_context() -> None:
+    assert AppProfile.RENOCLIENT._suffix_context() == (
+        "&i18n=en_US&lang=en_US&source=1&_app_client_=android"
+        "&_app_id_=com.eybond.renoclient&_app_version_=1.3.2.0"
+    )
+
+
+def test_from_name_returns_preset_case_insensitive() -> None:
+    assert AppProfile.from_name("renoclient") is AppProfile.RENOCLIENT
+    assert AppProfile.from_name("WatchPower") is AppProfile.WATCHPOWER
+
+
+def test_from_name_unknown_raises_value_error() -> None:
+    with pytest.raises(ValueError):
+        AppProfile.from_name("nope")
+
+
+def test_to_config_maps_profile_fields() -> None:
+    cfg = AppProfile.RENOCLIENT._to_config()
+    assert cfg.company_key == "bnrl_frRFjEz8Mkn"
+    assert cfg.base_url == "http://android.shinemonitor.com/public/"
+    assert "&_app_id_=com.eybond.renoclient" in cfg.suffix_context
+
+
+def test_custom_profile_defaults_to_shared_key_and_host() -> None:
+    p = AppProfile(app_id="com.foo.bar", app_version="2.0.0")
+    assert p.company_key == "bnrl_frRFjEz8Mkn"
+    assert p.base_url == "http://android.shinemonitor.com/public/"
+    assert "&_app_id_=com.foo.bar" in p._suffix_context()
+
+
+def test_query_devices_url_action_and_paging() -> None:
+    cfg = ProtocolConfig(
+        base_url="http://mock/public/", suffix_context="&source=1", company_key="ck"
+    )
+    auth = AuthState(token="T", secret="S", expire=600)
+    url = query_devices_url(cfg, auth, page=0, pagesize=50)
+    params = _params_from(url)
+    assert params["action"] == "queryDevices"
+    assert params["page"] == "0"
+    assert params["pagesize"] == "50"
+    assert params["token"] == "T"
 
 
 def test_parse_login_returns_auth_state() -> None:

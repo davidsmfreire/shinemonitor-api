@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from shinemonitor_api import ShineMonitorAPI, ShineMonitorAuthError
+from shinemonitor_api import AppProfile, ShineMonitorAPI, ShineMonitorAuthError
 
 from shinemonitor_mock import VALID_PASSWORD, VALID_USERNAME
 
@@ -37,9 +37,12 @@ def test_login_unknown_user(sync_http, client_kwargs) -> None:
 def test_login_bad_company_key(sync_http, base_url) -> None:
     api = ShineMonitorAPI(
         client=sync_http,
-        base_url=base_url,
-        company_key="not-the-right-key",
-        suffix_context="&source=1",
+        app=AppProfile(
+            app_id="test.app",
+            app_version="0.0.1",
+            company_key="not-the-right-key",
+            base_url=base_url,
+        ),
     )
     with pytest.raises(ShineMonitorAuthError) as excinfo:
         api.login(VALID_USERNAME, VALID_PASSWORD)
@@ -54,6 +57,23 @@ def test_get_devices(sync_http, client_kwargs) -> None:
     assert devices[0].serial_number == "9620230101001"
     assert devices[0].device_alias == "Inverter Garage"
     assert devices[1].device_alias is None
+
+
+def test_get_devices_falls_back_to_query_devices_on_258(sync_http, base_url) -> None:
+    # RenoClient-scoped device: webQueryDeviceEs → 258, queryDevices serves it.
+    api = ShineMonitorAPI(
+        client=sync_http,
+        app=AppProfile(
+            app_id="com.eybond.renoclient",
+            app_version="1.3.2.0",
+            company_key="test-company",
+            base_url=base_url,
+        ),
+    )
+    api.login(VALID_USERNAME, VALID_PASSWORD)
+    devices = api.get_devices()
+    assert len(devices) == 2
+    assert devices[0].serial_number == "9620230101001"
 
 
 def test_get_last_data(sync_http, client_kwargs) -> None:

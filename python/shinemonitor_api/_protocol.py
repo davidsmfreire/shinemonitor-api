@@ -11,7 +11,7 @@ import hashlib
 import time
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
+from typing import Any, ClassVar
 
 from .models import DeviceIdentifier, LastData, parse_last_data
 
@@ -55,6 +55,77 @@ class ProtocolConfig:
     company_key: str = WATCHPOWER_COMPANY_KEY
 
 
+@dataclass(frozen=True)
+class AppProfile:
+    """A vendor app's request identity.
+
+    The ShineMonitor backend is multi-tenant: devices are scoped to the app
+    that registered them, identified on the wire by ``_app_id_``. Each
+    WatchPower-class white-label (WatchPower, RenoClient, ...) is one profile.
+
+    Only ``app_id`` and ``app_version`` vary between the known Eybond apps;
+    ``company_key`` and ``base_url`` are shared. ``locale`` sets ``i18n``/
+    ``lang`` and has no effect on device scoping. Construct one directly for
+    an app the library does not ship a preset for.
+    """
+
+    app_id: str
+    app_version: str
+    company_key: str = WATCHPOWER_COMPANY_KEY
+    base_url: str = DEFAULT_BASE_URL
+    locale: str = "en_US"
+    source: int = 1
+    app_client: str = "android"
+
+    # Presets, assigned after the class body (see below).
+    WATCHPOWER: ClassVar[AppProfile]
+    RENOCLIENT: ClassVar[AppProfile]
+
+    def _suffix_context(self) -> str:
+        """The fixed 7-field query suffix every Eybond app appends.
+
+        Mirrors ``com.eybond.smartclient.utils.VertifyUtils.getBaseAction``.
+        """
+        return (
+            f"&i18n={self.locale}&lang={self.locale}&source={self.source}"
+            f"&_app_client_={self.app_client}"
+            f"&_app_id_={self.app_id}&_app_version_={self.app_version}"
+        )
+
+    def _to_config(self) -> ProtocolConfig:
+        return ProtocolConfig(
+            base_url=self.base_url,
+            suffix_context=self._suffix_context(),
+            company_key=self.company_key,
+        )
+
+    @classmethod
+    def from_name(cls, name: str) -> AppProfile:
+        """Look up a shipped preset by name (case-insensitive)."""
+        try:
+            return KNOWN_APPS[name.strip().lower()]
+        except KeyError:
+            raise ValueError(
+                f"Unknown app {name!r}; known apps: {sorted(KNOWN_APPS)}"
+            ) from None
+
+
+# Reverse-engineered from the WatchPower Android app (wifiapp.volfw.watchpower).
+AppProfile.WATCHPOWER = AppProfile(
+    app_id="wifiapp.volfw.watchpower", app_version="1.0.6.3"
+)
+# Reverse-engineered from RenoClient / Renovigi (com.eybond.renoclient),
+# an Eybond SmartClient white-label sharing WatchPower's company key.
+AppProfile.RENOCLIENT = AppProfile(
+    app_id="com.eybond.renoclient", app_version="1.3.2.0"
+)
+
+KNOWN_APPS: dict[str, AppProfile] = {
+    "watchpower": AppProfile.WATCHPOWER,
+    "renoclient": AppProfile.RENOCLIENT,
+}
+
+
 def _salt() -> str:
     return str(round(time.time() * 1000))
 
@@ -94,6 +165,26 @@ _authed_url = authed_url
 
 def devices_url(config: ProtocolConfig, auth: AuthState) -> str:
     return _authed_url(config, auth, f"&action=webQueryDeviceEs{config.suffix_context}")
+
+
+def query_devices_url(
+    config: ProtocolConfig,
+    auth: AuthState,
+    page: int | None = None,
+    pagesize: int | None = None,
+) -> str:
+    """Documented ``queryDevices`` list (chapter 5) — whole-account.
+
+    Fallback for accounts whose devices the undocumented ``webQueryDeviceEs``
+    action does not return (e.g. registered via another WatchPower-class
+    white-label app such as RenoClient).
+    """
+    base_action = f"&action=queryDevices{config.suffix_context}"
+    if page is not None:
+        base_action += f"&page={page}"
+    if pagesize is not None:
+        base_action += f"&pagesize={pagesize}"
+    return _authed_url(config, auth, base_action)
 
 
 def last_data_url(

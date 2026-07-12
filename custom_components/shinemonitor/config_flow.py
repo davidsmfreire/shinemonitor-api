@@ -7,21 +7,26 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from shinemonitor_api import ShineMonitorAuthError
+from shinemonitor_api import KNOWN_APPS, AppProfile, ShineMonitorAuthError
 from shinemonitor_api.aio import AsyncShineMonitorAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import CONF_APP_PROFILE, DEFAULT_APP_PROFILE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+_APP_PROFILE_OPTIONS = {name: name.capitalize() for name in KNOWN_APPS}
 
 _USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_APP_PROFILE, default=DEFAULT_APP_PROFILE): vol.In(
+            _APP_PROFILE_OPTIONS
+        ),
     }
 )
 
@@ -31,8 +36,9 @@ class ShineMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _validate(self, username: str, password: str) -> None:
-        api = AsyncShineMonitorAPI(client=get_async_client(self.hass))
+    async def _validate(self, username: str, password: str, app_profile: str) -> None:
+        app = AppProfile.from_name(app_profile)
+        api = AsyncShineMonitorAPI(app=app, client=get_async_client(self.hass))
         await api.login(username, password)
 
     async def async_step_user(
@@ -41,10 +47,11 @@ class ShineMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             username = user_input[CONF_USERNAME]
+            app_profile = user_input.get(CONF_APP_PROFILE, DEFAULT_APP_PROFILE)
             await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
             try:
-                await self._validate(username, user_input[CONF_PASSWORD])
+                await self._validate(username, user_input[CONF_PASSWORD], app_profile)
             except ShineMonitorAuthError as err:
                 _LOGGER.warning("ShineMonitor login failed: %s", err)
                 errors["base"] = "invalid_auth"
@@ -71,7 +78,9 @@ class ShineMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._validate(
-                    entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    entry.data[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    entry.data.get(CONF_APP_PROFILE, DEFAULT_APP_PROFILE),
                 )
             except ShineMonitorAuthError:
                 errors["base"] = "invalid_auth"
