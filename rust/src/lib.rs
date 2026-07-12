@@ -628,9 +628,7 @@ impl ShineMonitorAPI {
                     .as_array()
                     .map(|arr| {
                         arr.iter()
-                            .filter_map(|v| {
-                                serde_json::from_value(v.clone()).ok()
-                            })
+                            .filter_map(|v| serde_json::from_value(v.clone()).ok())
                             .collect()
                     })
                     .unwrap_or_default();
@@ -644,6 +642,8 @@ impl ShineMonitorAPI {
             last_err = Some(api_err);
         }
 
-        Err(last_err.unwrap_or_else(|| ApiError::local(258, "all app profiles returned ERR_NOT_FOUND_DEVICE")))
+        Err(last_err.unwrap_or_else(|| {
+            ApiError::local(258, "all app profiles returned ERR_NOT_FOUND_DEVICE")
+        }))
     }
 }

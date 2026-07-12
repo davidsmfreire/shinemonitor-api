@@ -12,6 +12,7 @@ jobs:
     outputs:
       python: ${{ steps.filter.outputs.python }}
       rust: ${{ steps.filter.outputs.rust }}
+      go: ${{ steps.filter.outputs.go }}
       spec: ${{ steps.filter.outputs.spec }}
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,11 @@ jobs:
               - '.pre-commit-config.yaml'
             rust:
               - 'rust/**'
+              - 'mock-server/**'
+              - 'spec/**'
+              - '.github/workflows/release.yml'
+            go:
+              - 'go/**'
               - 'mock-server/**'
               - 'spec/**'
               - '.github/workflows/release.yml'
@@ -98,8 +104,29 @@ jobs:
           cargo build --release
           cargo test
 
+  go:
+    needs: [detect-changes, lint]
+    if: needs.detect-changes.outputs.go == 'true' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install python deps for mock server
+        working-directory: python
+        run: uv sync --group test
+      - run: go vet ./...
+      - run: go test ./...
+
   release-python:
-    needs: [python, rust]
+    needs: [python, rust, go]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: release
@@ -118,7 +145,7 @@ jobs:
         run: uv publish --trusted-publishing always
 
   release-rust:
-    needs: [python, rust]
+    needs: [python, rust, go]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: release
