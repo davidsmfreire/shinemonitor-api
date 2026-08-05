@@ -148,10 +148,16 @@ def parse_last_data(response: dict[str, Any]) -> LastData:
     """Parse a `querySPDeviceLastData` response into a `LastData` model."""
     dat = response["dat"]
     pars = dat["pars"]
+    all_fields = [
+        item
+        for sublist in pars.values()
+        if isinstance(sublist, list)
+        for item in sublist
+    ]
     return LastData(
         timestamp=_parse_gts(dat["gts"]),
-        grid=LastDataGrid(**_parse_typed(pars["gd_"], _GRID_FIELDS)),
-        system=LastDataSystem(**_parse_strings(pars["sy_"], _SYSTEM_FIELDS)),
-        pv=LastDataPV(**_parse_typed(pars["pv_"], _PV_FIELDS)),
-        main=LastDataMain(**_parse_typed(pars["bt_"], _MAIN_FIELDS)),
+        grid=LastDataGrid(**_parse_typed(all_fields, _GRID_FIELDS)),
+        system=LastDataSystem(**_parse_strings(all_fields, _SYSTEM_FIELDS)),
+        pv=LastDataPV(**_parse_typed(all_fields, _PV_FIELDS)),
+        main=LastDataMain(**_parse_typed(all_fields, _MAIN_FIELDS)),
     )

@@ -233,3 +233,39 @@ def test_parse_last_round_trips_main_fields() -> None:
     assert snapshot.main.ac_output_active_power == 1100
     assert snapshot.system.model == "5KW"
     assert snapshot.timestamp.year == 2026
+
+
+def test_parse_last_extracts_from_separate_bc_and_pv_blocks() -> None:
+    snapshot = parse_last(
+        {
+            "err": 0,
+            "desc": "ERR_NONE",
+            "dat": {
+                "gts": "2026-08-05 14:37:29",
+                "pars": {
+                    "pv_": [
+                        {"id": "bt_voltage_1", "val": "129.4"},
+                        {"id": "bt_input_power", "val": "0"},
+                    ],
+                    "sy_": [{"id": "sy_model", "val": "Off Grid"}],
+                    "gd_": [{"id": "bt_grid_voltage", "val": "0.0"}],
+                    "bt_": [
+                        {"id": "bt_battery_voltage", "val": "49.3"},
+                        {"id": "bt_battery_capacity", "val": "71"},
+                    ],
+                    "bc_": [
+                        {"id": "bt_ac_output_voltage", "val": "230.0"},
+                        {"id": "bt_grid_AC_frequency", "val": "50.0"},
+                        {"id": "bt_load_active_power_sole", "val": "533"},
+                        {"id": "bt_output_load_percent", "val": "12"},
+                    ],
+                },
+            },
+        }
+    )
+    assert snapshot.main.pv_input_voltage == 129.4
+    assert snapshot.main.battery_capacity == 71
+    assert snapshot.main.ac_output_voltage == 230.0
+    assert snapshot.main.ac_output_frequency == 50.0
+    assert snapshot.main.ac_output_active_power == 533
+    assert snapshot.main.output_load_percent == 12
