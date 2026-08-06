@@ -400,12 +400,22 @@ impl ShineMonitorLastData {
     fn from_json(json: &serde_json::Value) -> Self {
         let dat_field = &json["dat"];
         let pars_field = &dat_field["pars"];
+        let all_fields = pars_field
+            .as_object()
+            .map(|obj| {
+                obj.values()
+                    .filter(|v| v.is_array())
+                    .flat_map(|v| v.as_array().unwrap().iter().cloned())
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let all = serde_json::Value::Array(all_fields);
         ShineMonitorLastData {
             timestamp: parse_gts(&dat_field["gts"]),
-            grid: ShineMonitorLastDataGrid::from_json(&pars_field["gd_"]),
-            system: ShineMonitorLastDataSystem::from_json(&pars_field["sy_"]),
-            pv: ShineMonitorLastDataPV::from_json(&pars_field["pv_"]),
-            main: ShineMonitorLastDataMain::from_json(&pars_field["bt_"]),
+            grid: ShineMonitorLastDataGrid::from_json(&all),
+            system: ShineMonitorLastDataSystem::from_json(&all),
+            pv: ShineMonitorLastDataPV::from_json(&all),
+            main: ShineMonitorLastDataMain::from_json(&all),
         }
     }
 }
@@ -645,5 +655,66 @@ impl ShineMonitorAPI {
         Err(last_err.unwrap_or_else(|| {
             ApiError::local(258, "all app profiles returned ERR_NOT_FOUND_DEVICE")
         }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ShineMonitorLastData;
+
+    #[test]
+    fn extracts_telemetry_across_separate_block_arrays() {
+        let json = serde_json::json!({
+            "err": 0,
+            "desc": "ERR_NONE",
+            "dat": {
+                "gts": "2026-08-05 14:37:29",
+                "pars": {
+                    "gd_": [
+                        {"id": "gd_grid_rating_voltage", "val": "230.0"},
+                        {"id": "gd_grid_rating_current", "val": "30.0"},
+                        {"id": "gd_battery_rating_voltage", "val": "48.0"},
+                        {"id": "gd_bse_input_voltage_read", "val": "230.0"},
+                        {"id": "gd_ac_output_rating_current", "val": "30.0"},
+                        {"id": "gd_bse_output_frequency_read", "val": "50.0"},
+                        {"id": "gd_ac_output_rating_apparent_power", "val": "5000"},
+                        {"id": "gd_ac_output_rating_active_power", "val": "5000"},
+                    ],
+                    "sy_": [
+                        {"id": "sy_model", "val": "Off Grid"},
+                        {"id": "sy_main_cpu1_firmware_version", "val": "01.23"},
+                        {"id": "sy_main_cpu2_firmware_version", "val": "04.56"},
+                    ],
+                    "pv_": [
+                        {"id": "pv_input_current", "val": "12.5"},
+                        {"id": "bt_voltage_1", "val": "129.4"},
+                        {"id": "bt_input_power", "val": "0"},
+                    ],
+                    "bt_": [
+                        {"id": "bt_grid_voltage", "val": "0.0"},
+                        {"id": "bt_grid_frequency", "val": "50.0"},
+                        {"id": "bt_battery_voltage", "val": "49.3"},
+                        {"id": "bt_battery_capacity", "val": "71"},
+                        {"id": "bt_battery_charging_current", "val": "0.0"},
+                        {"id": "bt_battery_discharge_current", "val": "0.0"},
+                        {"id": "bt_ac_output_apparent_power", "val": "1200"},
+                    ],
+                    "bc_": [
+                        {"id": "bt_ac_output_voltage", "val": "230.0"},
+                        {"id": "bt_grid_AC_frequency", "val": "50.0"},
+                        {"id": "bt_load_active_power_sole", "val": "533"},
+                        {"id": "bt_output_load_percent", "val": "12"},
+                    ],
+                },
+            },
+        });
+        let snapshot = ShineMonitorLastData::from_json(&json);
+        assert!((snapshot.main.pv_input_voltage - 129.4).abs() < 0.001);
+        assert_eq!(snapshot.main.pv_input_power, 0);
+        assert_eq!(snapshot.main.battery_capacity, 71);
+        assert!((snapshot.main.ac_output_voltage - 230.0).abs() < 0.001);
+        assert!((snapshot.main.ac_output_frequency - 50.0).abs() < 0.001);
+        assert_eq!(snapshot.main.ac_output_active_power, 533);
+        assert_eq!(snapshot.main.output_load_percent, 12);
     }
 }
