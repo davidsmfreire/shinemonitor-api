@@ -12,7 +12,9 @@ from .server import (
     TOKEN_EXPIRES,
     VALID_COMPANY_KEY,
     VALID_PASSWORD,
+    VALID_SPACED_USERNAME,
     VALID_USERNAME,
+    VALID_USERNAMES,
     create_app,
 )
 
@@ -26,6 +28,8 @@ __all__ = [
     "TOKEN_EXPIRES",
     "VALID_COMPANY_KEY",
     "VALID_PASSWORD",
+    "VALID_SPACED_USERNAME",
     "VALID_USERNAME",
+    "VALID_USERNAMES",
     "create_app",
 ]

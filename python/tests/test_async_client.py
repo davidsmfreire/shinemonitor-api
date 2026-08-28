@@ -10,12 +10,20 @@ import pytest
 from shinemonitor_api import AppProfile, ShineMonitorAuthError
 from shinemonitor_api.aio import AsyncShineMonitorAPI
 
-from shinemonitor_mock import VALID_PASSWORD, VALID_USERNAME
+from shinemonitor_mock import VALID_PASSWORD, VALID_SPACED_USERNAME, VALID_USERNAME
 
 
 async def test_login_success(async_http, client_kwargs) -> None:
     api = AsyncShineMonitorAPI(client=async_http, **client_kwargs)
     await api.login(VALID_USERNAME, VALID_PASSWORD)
+    assert api.auth is not None
+    assert api.auth.token == "tok-12345"
+
+
+async def test_login_success_username_with_space(async_http, client_kwargs) -> None:
+    """A username containing a space must be form-encoded as ``+`` for signing."""
+    api = AsyncShineMonitorAPI(client=async_http, **client_kwargs)
+    await api.login(VALID_SPACED_USERNAME, VALID_PASSWORD)
     assert api.auth is not None
     assert api.auth.token == "tok-12345"
 

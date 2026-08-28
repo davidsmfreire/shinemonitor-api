@@ -41,3 +41,6 @@ with httpx.Client(transport=transport, base_url="http://mock") as client:
 Importable constants live alongside the server: `VALID_USERNAME`,
 `VALID_PASSWORD`, `VALID_COMPANY_KEY`, `ISSUED_TOKEN`, `ISSUED_SECRET`,
 `DEVICES`, `LAST_DATA_BY_SN`, `DAILY_DATA_ROWS`, `DAILY_DATA_TITLES`.
+`VALID_SPACED_USERNAME` is an alias whose username contains a space —
+clients must form-encode it as `+` (in both the query string and the
+signature) or the mock rejects the request, matching the real backend.

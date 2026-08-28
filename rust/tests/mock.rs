@@ -122,6 +122,25 @@ fn login_and_get_last_data() {
 }
 
 #[test]
+fn login_with_spaced_username() {
+    let Some(python) = find_python() else {
+        eprintln!("skipping mock test: set SHINEMONITOR_MOCK_PYTHON or run `uv sync` in python/");
+        return;
+    };
+
+    let server = MockServer::spawn(&python);
+    let mut api = build_api(&server.url);
+
+    // The vendor app form-encodes the username as `+` when signing; the
+    // mock rejects the request if the sign does not cover that form.
+    api.login("demo user", FIXTURE_PASSWORD)
+        .expect("login with spaced username");
+
+    let snapshot = api.get_last_data().expect("get_last_data");
+    assert_eq!(snapshot.main.battery_capacity, 85);
+}
+
+#[test]
 fn login_bad_password_returns_error() {
     let Some(python) = find_python() else {
         eprintln!("skipping mock test: set SHINEMONITOR_MOCK_PYTHON or run `uv sync` in python/");
