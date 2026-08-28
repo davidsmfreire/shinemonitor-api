@@ -32,6 +32,12 @@ from fastapi import FastAPI, Request
 # --- Canonical fixture data ------------------------------------------------
 
 VALID_USERNAME = "demo-user"
+# USN containing a space: the vendor app form-encodes it as `+` in the
+# signed request string (and the query string). Starlette decodes `+`
+# back to a space, so the parsed value on the wire still holds the
+# literal space — mirroring what the real backend sees.
+VALID_SPACED_USERNAME = "demo user"
+VALID_USERNAMES = (VALID_USERNAME, VALID_SPACED_USERNAME)
 VALID_PASSWORD = "demo-pass"  # nosec B105 - fixture, not a real credential
 VALID_COMPANY_KEY = "test-company"
 ISSUED_TOKEN = "tok-12345"  # nosec B105 - fixture, not a real credential
@@ -251,11 +257,11 @@ def _handle_auth(
     base_action = _base_action(request, {"sign", "salt"})
     expected = _hash(salt, _hash(VALID_PASSWORD), base_action)
     if sign != expected:
-        if usr != VALID_USERNAME:
+        if usr not in VALID_USERNAMES:
             return _err(0x0105, "ERR_USER_NOT_EXIST")
         return _err(0x0010, "ERR_PASSWORD_ERROR")
 
-    if usr != VALID_USERNAME:
+    if usr not in VALID_USERNAMES:
         return _err(0x0105, "ERR_USER_NOT_EXIST")
 
     return _ok(

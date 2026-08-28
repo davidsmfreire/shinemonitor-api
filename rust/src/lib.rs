@@ -518,10 +518,22 @@ impl ShineMonitorAPI {
         ShineMonitorAPI::sha1_str_lower_case(arg_concat.as_bytes())
     }
 
+    /// Form-encode a username the way the vendor app embeds it in the URL.
+    ///
+    /// Spaces must become `+` in the signed request string; hashing a
+    /// literal space produces a sign the server rejects for accounts whose
+    /// username contains one. Other characters are left untouched to match
+    /// the vendor client's behavior.
+    fn encode_username(username: &str) -> String {
+        username.replace(' ', "+")
+    }
+
     pub fn login(&mut self, username: &str, password: &str) -> Result<(), ApiError> {
         let base_action = format!(
             "&action=authSource&usr={}&company-key={}{}",
-            username, self._company_key, self._suffix_context
+            ShineMonitorAPI::encode_username(username),
+            self._company_key,
+            self._suffix_context
         );
 
         let salt = ShineMonitorAPI::generate_salt();

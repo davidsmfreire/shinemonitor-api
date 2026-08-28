@@ -52,6 +52,18 @@ def test_login_url_signs_with_password_hash() -> None:
     assert params["sign"] == expected
 
 
+def test_login_url_encodes_spaces_in_username() -> None:
+    cfg = ProtocolConfig(
+        base_url="http://mock/public/", suffix_context="&source=1", company_key="ck"
+    )
+    url = login_url(cfg, "First Last", "pass")
+    params = _params_from(url)
+    assert params["usr"] == "First+Last"
+    base_action = "&action=authSource&usr=First+Last&company-key=ck&source=1"
+    expected = _sha1(params["salt"] + _sha1("pass") + base_action)
+    assert params["sign"] == expected
+
+
 def test_authed_url_signs_with_token_and_secret() -> None:
     cfg = ProtocolConfig(
         base_url="http://mock/public/", suffix_context="&source=1", company_key="ck"

@@ -16,6 +16,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -39,13 +40,13 @@ const (
 // The ShineMonitor backend is multi-tenant: devices are scoped to the
 // app that registered them, identified on the wire by _app_id_.
 type AppProfile struct {
-	AppID       string
-	AppVersion  string
-	CompanyKey  string
-	BaseURL     string
-	Locale      string
-	Source      int
-	AppClient   string
+	AppID      string
+	AppVersion string
+	CompanyKey string
+	BaseURL    string
+	Locale     string
+	Source     int
+	AppClient  string
 }
 
 // suffixContext returns the 7-field query suffix this app injects into
@@ -61,22 +62,22 @@ func (p *AppProfile) suffixContext() string {
 var AppProfileWatchPower = AppProfile{
 	AppID:      "wifiapp.volfw.watchpower",
 	AppVersion: "1.0.6.3",
-	CompanyKey:  "bnrl_frRFjEz8Mkn",
-	BaseURL:     DefaultBaseURL,
-	Locale:      "pt_BR",
-	Source:      1,
-	AppClient:   "android",
+	CompanyKey: "bnrl_frRFjEz8Mkn",
+	BaseURL:    DefaultBaseURL,
+	Locale:     "pt_BR",
+	Source:     1,
+	AppClient:  "android",
 }
 
 // AppProfileRenoClient is the RenoClient / Renovigi white-label identity.
 var AppProfileRenoClient = AppProfile{
 	AppID:      "com.eybond.renoclient",
 	AppVersion: "1.3.2.0",
-	CompanyKey:  "bnrl_frRFjEz8Mkn",
-	BaseURL:     DefaultBaseURL,
-	Locale:      "pt_BR",
-	Source:      1,
-	AppClient:   "android",
+	CompanyKey: "bnrl_frRFjEz8Mkn",
+	BaseURL:    DefaultBaseURL,
+	Locale:     "pt_BR",
+	Source:     1,
+	AppClient:  "android",
 }
 
 // KnownApps is the registry of all known vendor app profiles. The
@@ -182,11 +183,20 @@ var authErrCodes = map[int]struct{}{
 	0x0007: {}, 0x000F: {}, 0x0010: {}, 0x0019: {}, 0x0105: {}, 0x010E: {},
 }
 
+// encodeUsername form-encodes a username the way the vendor app embeds it
+// in the URL. Spaces must become '+' in the signed request string; hashing
+// a literal space produces a sign the server rejects for accounts whose
+// username contains one. Other characters are left untouched to match the
+// vendor client's behavior.
+func encodeUsername(username string) string {
+	return strings.ReplaceAll(username, " ", "+")
+}
+
 // Login signs in and stores the token+secret on the client.
 func (c *Client) Login(ctx context.Context, username, password string) error {
 	baseAction := fmt.Sprintf(
 		"&action=authSource&usr=%s&company-key=%s%s",
-		username, c.CompanyKey, c.SuffixContext,
+		encodeUsername(username), c.CompanyKey, c.SuffixContext,
 	)
 	salt := saltMs()
 	pwdHash := sha1Hex(password)

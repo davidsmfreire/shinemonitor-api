@@ -104,6 +104,19 @@ func TestLoginSuccess(t *testing.T) {
 	}
 }
 
+func TestLoginWithSpacedUsername(t *testing.T) {
+	srv := startMock(t)
+	c := newTestClient(srv.URL)
+	// The vendor app form-encodes the username as '+' when signing; the
+	// mock rejects the request if the sign does not cover that form.
+	if err := c.Login(context.Background(), "demo user", fixturePass); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+	if c.AuthState() == nil || c.AuthState().Token != "tok-12345" {
+		t.Fatalf("unexpected auth state: %+v", c.AuthState())
+	}
+}
+
 func TestLoginBadPassword(t *testing.T) {
 	srv := startMock(t)
 	c := newTestClient(srv.URL)

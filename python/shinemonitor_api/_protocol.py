@@ -138,9 +138,20 @@ def _hash(*parts: str) -> str:
     return _sha1("".join(parts).encode("utf-8"))
 
 
+def _encode_username(username: str) -> str:
+    """Form-encode a username the way the vendor app embeds it in the URL.
+
+    Spaces must become ``+`` in the signed request string; hashing a
+    literal space produces a sign the server rejects for accounts whose
+    username contains one. Other characters are left untouched to match
+    the vendor client's behavior.
+    """
+    return username.replace(" ", "+")
+
+
 def login_url(config: ProtocolConfig, username: str, password: str) -> str:
     base_action = (
-        f"&action=authSource&usr={username}"
+        f"&action=authSource&usr={_encode_username(username)}"
         f"&company-key={config.company_key}{config.suffix_context}"
     )
     salt = _salt()
